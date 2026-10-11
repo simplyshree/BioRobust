@@ -1,0 +1,6 @@
+# Biological fixtures are byte-sensitive; preserve LF content and checksums on Windows.
+*.fa binary
+*.fasta binary
+*.fq binary
+*.fastq binary
+*.vcf binary
