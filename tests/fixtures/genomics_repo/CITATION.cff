@@ -1,0 +1,6 @@
+cff-version: 1.2.0
+title: Example variant workflow
+authors:
+  - family-names: Example
+    given-names: Researcher
+

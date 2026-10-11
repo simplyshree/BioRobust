@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BioRobust report",
+  "type": "object",
+  "required": ["schema_version", "tool", "target", "profile", "generated_at", "decision", "summary", "findings", "notes"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "tool": {"type": "object", "required": ["name", "version"], "properties": {"name": {"type": "string"}, "version": {"type": "string"}}},
+    "target": {"type": "string"},
+    "profile": {"type": "string"},
+    "generated_at": {"type": "string"},
+    "decision": {"enum": ["needs_attention", "review_required", "evidence_found", "not_assessed"]},
+    "summary": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "findings": {"type": "array", "items": {"type": "object", "required": ["rule_id", "title", "status", "severity", "message", "evidence", "recommendation"], "properties": {"rule_id": {"type": "string"}, "title": {"type": "string"}, "status": {"enum": ["pass", "fail", "unknown", "not_applicable", "manual_review"]}, "severity": {"enum": ["info", "low", "medium", "high"]}, "message": {"type": "string"}, "evidence": {"type": "array", "items": {"type": "string"}}, "recommendation": {"type": "string"}}}},
+    "notes": {"type": "array", "items": {"type": "string"}}
+  }
+}
+
