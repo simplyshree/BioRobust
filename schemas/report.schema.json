@@ -1,18 +1,55 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "BioRobust report",
+  "$id": "https://biorobust.dev/schema/report-0.2.json",
+  "title": "BioRobust evidence report",
   "type": "object",
-  "required": ["schema_version", "tool", "target", "profile", "generated_at", "decision", "summary", "findings", "notes"],
+  "additionalProperties": false,
+  "required": ["schema_version", "tool", "target", "profile", "generated_at", "rule_pack_version", "manifest_hash", "decision", "summary", "findings", "scanner_limitations", "notes"],
   "properties": {
-    "schema_version": {"type": "string"},
-    "tool": {"type": "object", "required": ["name", "version"], "properties": {"name": {"type": "string"}, "version": {"type": "string"}}},
-    "target": {"type": "string"},
-    "profile": {"type": "string"},
-    "generated_at": {"type": "string"},
+    "schema_version": {"const": "0.2"},
+    "tool": {"type": "object", "additionalProperties": false, "required": ["name", "version"], "properties": {"name": {"const": "biorobust"}, "version": {"type": "string", "minLength": 1}}},
+    "target": {"type": "string", "minLength": 1},
+    "profile": {"type": "string", "enum": ["generic", "genomics", "genomics-workflow"]},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "rule_pack_version": {"type": "string", "minLength": 1},
+    "manifest_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "decision": {"enum": ["needs_attention", "review_required", "evidence_found", "not_assessed"]},
-    "summary": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
-    "findings": {"type": "array", "items": {"type": "object", "required": ["rule_id", "title", "status", "severity", "message", "evidence", "recommendation"], "properties": {"rule_id": {"type": "string"}, "title": {"type": "string"}, "status": {"enum": ["pass", "fail", "unknown", "not_applicable", "manual_review"]}, "severity": {"enum": ["info", "low", "medium", "high"]}, "message": {"type": "string"}, "evidence": {"type": "array", "items": {"type": "string"}}, "recommendation": {"type": "string"}}}},
-    "notes": {"type": "array", "items": {"type": "string"}}
+    "summary": {"type": "object", "additionalProperties": false, "required": ["pass", "fail", "unknown", "not_applicable", "manual_review"], "properties": {"pass": {"type": "integer", "minimum": 0}, "fail": {"type": "integer", "minimum": 0}, "unknown": {"type": "integer", "minimum": 0}, "not_applicable": {"type": "integer", "minimum": 0}, "manual_review": {"type": "integer", "minimum": 0}}},
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+    "scanner_limitations": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "notes": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "observation", "evidence_type", "detector_confidence", "start_line", "end_line"],
+      "properties": {
+        "path": {"type": ["string", "null"]},
+        "observation": {"type": "string", "minLength": 1},
+        "evidence_type": {"enum": ["artifact", "declaration", "documentation", "test", "absence", "contradictory"]},
+        "detector_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "start_line": {"type": ["integer", "null"], "minimum": 1},
+        "end_line": {"type": ["integer", "null"], "minimum": 1}
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule_id", "title", "claim", "status", "severity", "confidence", "message", "evidence", "limitations", "recommendation"],
+      "properties": {
+        "rule_id": {"type": "string", "pattern": "^[A-Z0-9-]+$"},
+        "title": {"type": "string", "minLength": 1},
+        "claim": {"type": "string", "minLength": 1},
+        "status": {"enum": ["pass", "fail", "unknown", "not_applicable", "manual_review"]},
+        "severity": {"enum": ["info", "low", "medium", "high"]},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "message": {"type": "string", "minLength": 1},
+        "evidence": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/evidence"}},
+        "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "recommendation": {"type": "string"}
+      }
+    }
   }
 }
 

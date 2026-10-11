@@ -1,6 +1,6 @@
 # BioRobust
 
-BioRobust is an evidence-based robustness profiler for open-source genomic software and workflows. The first release is intentionally narrow: it scans a local repository, looks for reproducibility and genomics-specific evidence, and produces a JSON or HTML report.
+BioRobust is an evidence-based robustness profiler for open-source genomic software and workflows. It scans a local repository, looks for reproducibility and genomics-specific evidence, and produces a versioned JSON or HTML report.
 
 It does not certify scientific correctness, security, clinical fitness, or biological truth. A result is a structured starting point for review.
 
@@ -10,7 +10,9 @@ It does not certify scientific correctness, security, clinical fitness, or biolo
 - Checks project documentation, licensing, citation metadata, tests, CI, dependencies, pinning, and common credential exposure patterns.
 - Detects Nextflow, Snakemake, CWL, and WDL workflow definitions.
 - Looks for reference-genome provenance, known-answer validation, and portable execution environments.
-- Represents `pass`, `fail`, `unknown`, and `manual_review` explicitly.
+- Represents `pass`, `fail`, `unknown`, `not_applicable`, and `manual_review` explicitly.
+- Records structured evidence with repository-relative paths, line locations, observations, evidence type, and detector confidence.
+- Records a deterministic repository manifest hash and rule-pack version.
 - Emits a stable JSON report for automation and a compact HTML report for humans.
 
 ## Quick start
@@ -22,6 +24,8 @@ python -m pip install -e .
 
 biorobust scan . --profile genomics --format html --output report.html
 biorobust scan . --profile genomics --format json --output report.json
+biorobust rules
+biorobust explain DNA-REF-001
 ```
 
 The scanner is also runnable without installation:
@@ -42,7 +46,11 @@ Neuroscience, clinical certification, wet-lab protocols, human-genomic privacy c
 python -m unittest discover -s tests
 ```
 
-The test fixture under `tests/fixtures/genomics_repo` is intentionally small and synthetic. It exists to exercise report behavior, not to validate a real variant caller.
+The test fixtures under `tests/fixtures` are intentionally small and synthetic. They exercise evidence behavior, including missing references, placeholder checksums, mutable containers, missing expected outputs, and non-substantive `assert True` tests; they do not validate a real variant caller.
+
+## Scientific interpretation
+
+BioRobust can establish that observable repository artifacts support or fail a narrowly defined claim. It cannot establish that a method is biologically correct, that a reference is appropriate, that a workflow will run in every environment, or that a repository is clinically or scientifically certified. See [docs/validation-plan.md](docs/validation-plan.md) before interpreting future calibration results.
 
 ## Repository guide
 
@@ -51,4 +59,5 @@ The test fixture under `tests/fixtures/genomics_repo` is intentionally small and
 - [AGENT.md](AGENT.md) contains collaboration and change rules.
 - [ADR-001.md](ADR-001.md) records the local-first, evidence-first decision.
 - [schemas/report.schema.json](schemas/report.schema.json) defines the JSON contract.
+
 

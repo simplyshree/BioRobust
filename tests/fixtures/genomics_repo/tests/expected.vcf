@@ -1,3 +1,5 @@
 ##fileformat=VCFv4.3
 #CHROM POS ID REF ALT QUAL FILTER INFO
+chrMock 1 . A C . PASS .
+
 

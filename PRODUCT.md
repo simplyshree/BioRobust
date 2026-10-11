@@ -11,9 +11,9 @@ Researchers and maintainers often cannot tell whether a genomic repository is me
 - Infrastructure teams reviewing research software before running it.
 - Curators building evidence-based catalogs of biological software.
 
-## Goal for v0.1
+## Goal for v0.2
 
-Give a user a fast, reproducible report about the observable robustness signals in a local genomic repository, with evidence paths and explicit uncertainty.
+Give a user a fast, reproducible report about the observable robustness signals in a local genomic repository, with structured evidence, explicit uncertainty, and a deterministic snapshot identity.
 
 ## Non-goals
 
@@ -29,17 +29,18 @@ Give a user a fast, reproducible report about the observable robustness signals 
 1. User points BioRobust at a repository.
 2. BioRobust selects the `genomics` profile.
 3. Static checks inspect files, metadata, workflows, and documentation.
-4. Each finding reports status, severity, message, evidence, and recommendation.
+4. Each finding reports a claim, status, severity, confidence, structured evidence, limitations, and recommendation.
 5. User opens JSON in automation or HTML for review.
 
-## v0.1 acceptance criteria
+## v0.2 acceptance criteria
 
 - A fresh environment can install the package and run `biorobust scan .`.
 - A scan is deterministic apart from the report timestamp.
 - No repository code is executed during a scan.
 - Every finding has a stable rule ID and evidence or a clear statement that evidence was absent.
 - Missing evidence is represented as `unknown` or `manual_review`, not silently treated as a pass.
-- A genomics fixture demonstrates detection of workflow, reference provenance, validation data, and portability signals.
+- Placeholder checksum text, generic portability prose, mutable image tags, and `assert True` do not produce scientific `pass` findings.
+- A genomics fixture demonstrates detection of workflow, reference provenance, validation data, and portability signals with real local artifacts.
 
 ## Next extensions
 
@@ -47,4 +48,6 @@ Give a user a fast, reproducible report about the observable robustness signals 
 - Optional sandboxed dry runs for selected workflow engines.
 - Versioned rule packs for RNA-seq, metagenomics, and other genomics domains.
 - Maintainer-facing badges only after the underlying evidence model has been validated with real repositories.
+- Pilot calibration over 15–30 pinned external repositories, as described in [docs/validation-plan.md](docs/validation-plan.md).
+
 
