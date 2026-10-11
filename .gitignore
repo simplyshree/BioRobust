@@ -20,6 +20,7 @@ outputs/*.html
 outputs/*.json
 outputs/*.md
 outputs/*.pdf
+output/pdf/*.pdf
 
 # Repositories cloned by `biorobust start URL`
 .biorobust/

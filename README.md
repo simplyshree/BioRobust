@@ -34,7 +34,14 @@ code biorobust-report.md
 To create a shareable PDF instead:
 
 ```powershell
-biorobust start . --format pdf --output biorobust-report.pdf
+New-Item -ItemType Directory -Force output\pdf | Out-Null
+biorobust start . --format pdf --output output\pdf\biorobust-report.pdf
+```
+
+Generated PDFs are local review artifacts and are ignored by Git. Use the same pattern for a cloned project:
+
+```powershell
+biorobust start https://github.com/OWNER/PROJECT.git --format pdf --output output\pdf\PROJECT-BioRobust.pdf
 ```
 
 You can also start directly from a GitHub or other HTTP(S) Git URL. BioRobust clones it into `.biorobust/repos/` and reuses that local copy on later runs:
@@ -94,7 +101,8 @@ Answers include the relevant rule, status, and evidence. Treat `unknown` and `ma
 biorobust start project --format markdown --output report.md
 
 # Shareable PDF report
-biorobust start project --format pdf --output report.pdf
+New-Item -ItemType Directory -Force output\pdf | Out-Null
+biorobust start project --format pdf --output output\pdf\report.pdf
 
 # Machine-readable report for CI or scripts
 biorobust scan project --profile auto --format json --output report.json
