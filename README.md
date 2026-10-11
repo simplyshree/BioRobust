@@ -19,11 +19,25 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[test]"
 
-git clone https://github.com/OWNER/PROJECT.git project
-biorobust start project --output project-BioRobust.md
+# Run inside an already-cloned repository
+cd path\to\repository
+biorobust start .
 ```
 
-The `start` command is the recommended first pass. It creates a Markdown onboarding report. For automation or browser viewing:
+That is the normal workflow: open the repository folder and run one command. To save the report for VS Code:
+
+```powershell
+biorobust start . --output biorobust-report.md
+code biorobust-report.md
+```
+
+You can also start directly from a GitHub or other HTTP(S) Git URL. BioRobust clones it into `.biorobust/repos/` and reuses that local copy on later runs:
+
+```powershell
+biorobust start https://github.com/OWNER/PROJECT.git
+```
+
+The `start` command creates a Markdown onboarding report. For automation or browser viewing:
 
 ```powershell
 biorobust scan project --profile auto --format json --output project-BioRobust.json

@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 
-IGNORED_DIRS = {".git", ".hg", ".svn", ".venv", "venv", "node_modules", "__pycache__", ".pytest_cache"}
+IGNORED_DIRS = {".git", ".hg", ".svn", ".venv", "venv", "node_modules", "__pycache__", ".pytest_cache", ".biorobust"}
 
 
 class Repository:

@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
 from . import __version__
 from .reporting import write_html, write_json, write_markdown
@@ -24,8 +26,8 @@ def build_parser() -> argparse.ArgumentParser:
     scan_parser.add_argument("--format", choices=("json", "html", "markdown"), default="json", help="Report format")
     scan_parser.add_argument("--output", type=Path, help="Write the report to a file instead of stdout")
 
-    start_parser = subparsers.add_parser("start", help="Create a first-pass onboarding report for understanding and replication")
-    start_parser.add_argument("path", nargs="?", default=".", help="Repository directory")
+    start_parser = subparsers.add_parser("start", help="Create a first-pass report from a local repository or Git URL")
+    start_parser.add_argument("path", nargs="?", default=".", help="Repository directory or Git URL")
     start_parser.add_argument("--profile", choices=["auto", *sorted(PROFILES)], default="auto", help="Check profile")
     start_parser.add_argument("--format", choices=("json", "html", "markdown"), default="markdown", help="Report format")
     start_parser.add_argument("--output", type=Path, help="Write the report to a file instead of stdout")
@@ -39,6 +41,35 @@ def build_parser() -> argparse.ArgumentParser:
     ask_parser.add_argument("question", nargs="+", help="Question to answer from detected evidence")
     ask_parser.add_argument("--profile", choices=["auto", *sorted(PROFILES)], default="auto", help="Check profile")
     return parser
+
+
+def _start_target(source: str) -> str:
+    """Return a local path, cloning an HTTP(S) Git URL when necessary."""
+    parsed = urlparse(source)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return source
+
+    name = Path(parsed.path.rstrip("/")).name
+    if name.endswith(".git"):
+        name = name[:-4]
+    if not name or name in {".", ".."}:
+        raise ValueError("Could not determine a repository name from the Git URL")
+
+    destination = Path.cwd() / ".biorobust" / "repos" / name
+    if destination.exists():
+        if not destination.is_dir():
+            raise ValueError(f"Repository destination is not a directory: {destination}")
+        return str(destination)
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    print(f"Cloning {source} to {destination}", file=sys.stderr)
+    try:
+        subprocess.run(["git", "clone", "--depth", "1", source, str(destination)], check=True)
+    except FileNotFoundError as exc:
+        raise ValueError("Git is required when starting from a URL") from exc
+    except subprocess.CalledProcessError as exc:
+        raise ValueError(f"Could not clone repository (git exited with {exc.returncode})") from exc
+    return str(destination)
 
 
 def _print_rules() -> None:
@@ -116,7 +147,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command not in {"scan", "start"}:
         return 2
     try:
-        report = scan(args.path, args.profile)
+        target = _start_target(args.path) if args.command == "start" else args.path
+        report = scan(target, args.profile)
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             with args.output.open("w", encoding="utf-8") as stream:

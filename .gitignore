@@ -20,6 +20,9 @@ outputs/*.html
 outputs/*.json
 outputs/*.md
 
+# Repositories cloned by `biorobust start URL`
+.biorobust/
+
 # External repositories used for local validation pilots
 work/external/
 
