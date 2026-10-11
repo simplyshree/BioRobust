@@ -83,6 +83,7 @@ BioRobust can establish that observable repository artifacts support or fail a n
 - [AGENT.md](AGENT.md) contains collaboration and change rules.
 - [ADR-001.md](ADR-001.md) records the local-first, evidence-first decision.
 - [ADR-002.md](ADR-002.md) records the profile, review-document, and terminal-question decision.
+- [docs/pilot-results.md](docs/pilot-results.md) records the first local SBOL and SeqTrainer pilot scans.
 - [schemas/report.schema.json](schemas/report.schema.json) defines the JSON contract.
 
 
