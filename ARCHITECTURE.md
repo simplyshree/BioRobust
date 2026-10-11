@@ -8,7 +8,7 @@ BioRobust is a local-first static analysis tool. The input boundary is a directo
 repository path
       |
       v
-Repository inspector -> profile checks -> Finding objects -> ScanReport
+Repository inspector -> profile resolver -> profile checks -> Finding objects -> ScanReport
                                                      |             |
                                                      v             v
                                                   JSON schema     HTML
@@ -18,12 +18,32 @@ Repository inspector -> profile checks -> Finding objects -> ScanReport
 
 - `repository.py` provides deterministic file discovery and bounded text reads.
 - `checks.py` contains small checks that return evidence-bearing `Finding` objects.
-- `scanner.py` selects the profile and orchestrates checks.
+- `profiles.py` is the profile registry and extension seam. Profiles combine generic checks with domain-specific checks and can be selected explicitly or through narrow `auto` detection.
+- `scanner.py` resolves the profile and orchestrates checks.
 - `models.py` defines the strict report contract, structured evidence, and status semantics.
 - `rules.py` defines the versioned rule catalog used by the CLI and reports.
 - `reporting.py` renders JSON and HTML.
 - `cli.py` exposes the command-line interface.
 - `schemas/report.schema.json` is the machine-readable output contract.
+
+## Profiles
+
+The current registry contains `generic`, `genomics`, `genomics-workflow`, and
+`sbol`. A profile is a named tuple of checks, a description, and a conservative
+detector. The SBOL profile is intentionally evidence-oriented: generic XML/JSON
+parsing can report serialization evidence, but the report remains `manual_review`
+or `unknown` where SBOL semantic or interoperability validation would be needed.
+
+New domains should add a profile and fixtures rather than adding domain-specific
+heuristics to generic checks. A future external plugin API can wrap the same
+`ProfileDefinition` contract without changing the report schema.
+
+## Review documents and terminal questions
+
+JSON is the stable machine contract. Markdown is a portable review document and
+HTML is the browser-friendly view. `biorobust ask PATH QUESTION` runs a scan and
+selects relevant findings by question terms; it is deliberately deterministic,
+local, and evidence-grounded rather than an unconstrained chat interface.
 
 ## Status semantics
 

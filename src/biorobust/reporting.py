@@ -61,4 +61,41 @@ def write_html(report: ScanReport, stream: TextIO) -> None:
     stream.write(render_html(report))
     stream.write("\n")
 
+def render_markdown(report: ScanReport) -> str:
+    """Render a portable review document without hiding uncertainty."""
+    lines = [
+        "# BioRobust evidence report",
+        "",
+        f"- **Target:** `{report.target}`",
+        f"- **Profile:** `{report.profile}`",
+        f"- **Decision:** `{report.decision}`",
+        f"- **Generated:** `{report.generated_at}`",
+        f"- **Rule pack:** `{report.rule_pack_version}`",
+        f"- **Manifest hash:** `{report.manifest_hash}`",
+        "",
+        "## Summary",
+        "",
+        " | ".join(f"**{status}**: {count}" for status, count in report.counts.items()),
+        "",
+        "## Findings",
+        "",
+        "| Rule | Status | Claim | Evidence | Recommendation |",
+        "|---|---|---|---|---|",
+    ]
+    for finding in report.findings:
+        evidence = "<br>".join(
+            f"`{item.path or '(absence)'}`: {item.observation}"
+            for item in finding.evidence[:5]
+        )
+        lines.append(
+            f"| `{finding.rule_id}` | **{finding.status}** | {finding.claim} | {evidence} | {finding.recommendation or '—'} |"
+        )
+    lines.extend(["", "## Limitations", ""])
+    lines.extend(f"- {limitation}" for limitation in report.scanner_limitations)
+    lines.extend(["", "## Notes", ""])
+    lines.extend(f"- {note}" for note in report.notes)
+    return "\n".join(lines) + "\n"
 
+
+def write_markdown(report: ScanReport, stream: TextIO) -> None:
+    stream.write(render_markdown(report))

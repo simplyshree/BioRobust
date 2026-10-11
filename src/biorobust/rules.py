@@ -6,7 +6,7 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 
-RULE_PACK_VERSION = "0.2.0"
+RULE_PACK_VERSION = "0.3.0"
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,6 +39,11 @@ RULES: tuple[RuleDefinition, ...] = (
     RuleDefinition("DNA-REF-001", "Reference genome provenance", "genomics", "The referenced genome assembly and integrity evidence are traceable.", "Requires a local/external reference identity, assembly/version, syntactically valid associated checksum, and a matching local digest when possible.", ("This does not validate the biological suitability of the assembly.",)),
     RuleDefinition("DNA-VAL-001", "Known-answer validation", "genomics", "Representative inputs are connected to an expected output by a substantive comparison.", "Requires artifacts plus a test or documented command that compares actual and expected results.", ("Static analysis does not run the test or establish scientific validity.",)),
     RuleDefinition("DNA-PORT-001", "Execution portability", "genomics", "The repository declares an immutable container or pinned environment.", "Distinguishes digest-pinned images and exact environment pins from mutable tags or prose.", ("A pinned environment can still contain incorrect or unavailable software.",)),
+    RuleDefinition("SBOL-001", "SBOL artifact detection", "sbol", "The repository contains an identifiable SBOL design artifact.", "Looks for SBOL-specific file extensions or namespace markers.", ("A detected artifact is not proof of SBOL semantic validity.",)),
+    RuleDefinition("SBOL-002", "SBOL serialization syntax", "sbol", "Detected SBOL serializations are syntactically parseable by a generic parser.", "Parses detected XML/JSON artifacts and explicitly reports unsupported Turtle/RDF parsing.", ("Generic parsing is not SBOL schema or semantic validation.",)),
+    RuleDefinition("SBOL-003", "SBOL version declaration", "sbol", "The repository identifies the SBOL version used by its artifacts or tooling.", "Detects explicit SBOL 2 or SBOL 3 signals.", ("The scanner does not infer the intended version from ambiguous artifacts.",)),
+    RuleDefinition("SBOL-004", "SBOL validation evidence", "sbol", "The repository provides an explicit SBOL validation or validator-integration signal.", "Detects validation-related tests, dependencies, commands, or documentation without executing them.", ("The validator is not run by the static MVP.",)),
+    RuleDefinition("SBOL-005", "SBOL interoperability evidence", "sbol", "The repository provides an explicit SBOL interoperability or round-trip signal.", "Detects import/export, conversion, serialization, and round-trip signals.", ("Static signals do not establish cross-tool semantic equivalence.",)),
 )
 
 

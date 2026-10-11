@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
+import xml.etree.ElementTree as ET
 from collections.abc import Callable, Iterable
 from pathlib import Path
 
@@ -15,6 +17,10 @@ Check = Callable[[Repository], Finding]
 LIMITATION_STATIC = "Static inspection does not execute target code or establish scientific correctness."
 GENERIC_LIMITATIONS = (LIMITATION_STATIC,)
 GENOMICS_LIMITATIONS = (LIMITATION_STATIC, "Domain judgment is required to determine whether the chosen data and reference are scientifically appropriate.")
+SBOL_LIMITATIONS = (
+    LIMITATION_STATIC,
+    "SBOL semantic validity, biological design intent, and interoperability are not established by these static checks.",
+)
 
 
 def _line_number(text: str, needle: str) -> int | None:
@@ -462,7 +468,152 @@ def check_portability(repo: Repository) -> Finding:
     return _finding("DNA-PORT-001", "Execution portability", "The repository declares an immutable container or pinned environment.", "unknown", "medium", 0.82, "No actionable container declaration or pinned environment was detected.", evidence=[_absence("Words such as Docker or conda in prose are not treated as portability evidence.")], limitations=GENOMICS_LIMITATIONS, recommendation="Provide an immutable container digest or pinned environment specification.")
 
 
+SBOL_SUFFIXES = {".sbol", ".sbol2", ".sbol3", ".rdf", ".ttl"}
+SBOL_TEXT_SUFFIXES = SBOL_SUFFIXES | {".xml", ".json", ".yaml", ".yml", ".py", ".r", ".md", ".txt"}
+SBOL_MARKERS = ("sbols.org", "sbol3", "sbol 3", "sbol2", "sbol 2", "libsbol", "pysbol")
+
+
+def _sbol_artifacts(repo: Repository) -> list[Path]:
+    """Find likely SBOL artifacts without treating every JSON/XML file as SBOL."""
+    artifacts: list[Path] = []
+    for path in repo.files():
+        if path.suffix.lower() in SBOL_SUFFIXES:
+            artifacts.append(path)
+            continue
+        if path.suffix.lower() not in {".xml", ".json", ".ttl", ".rdf"}:
+            continue
+        text = repo.text(path, limit=80_000).lower()
+        if any(marker in text for marker in SBOL_MARKERS):
+            artifacts.append(path)
+    return artifacts
+
+
+def _sbol_context_files(repo: Repository) -> list[Path]:
+    return [
+        path
+        for path in repo.files()
+        if path.suffix.lower() in SBOL_TEXT_SUFFIXES
+        and ("sbol" in repo.text(path, limit=80_000).lower() or path in _sbol_artifacts(repo))
+    ]
+
+
+def check_sbol_artifacts(repo: Repository) -> Finding:
+    artifacts = _sbol_artifacts(repo)
+    if not artifacts:
+        return _finding(
+            "SBOL-001",
+            "SBOL artifact detection",
+            "The repository contains an identifiable SBOL design artifact.",
+            "unknown",
+            "medium",
+            0.86,
+            "No likely SBOL artifact was detected.",
+            evidence=[_absence("No SBOL-specific file extension or namespace marker was detected.")],
+            limitations=SBOL_LIMITATIONS,
+            recommendation="Point the SBOL profile at a repository containing SBOL 2 or SBOL 3 artifacts, or use a different profile.",
+        )
+    return _finding(
+        "SBOL-001",
+        "SBOL artifact detection",
+        "The repository contains an identifiable SBOL design artifact.",
+        "pass",
+        "medium",
+        0.95,
+        f"Detected {len(artifacts)} likely SBOL artifact(s).",
+        evidence=[_evidence(repo, path, "SBOL-specific artifact or namespace marker detected.", "artifact", 0.95) for path in artifacts[:10]],
+        limitations=SBOL_LIMITATIONS,
+    )
+
+
+def check_sbol_syntax(repo: Repository) -> Finding:
+    artifacts = _sbol_artifacts(repo)
+    if not artifacts:
+        return _finding(
+            "SBOL-002",
+            "SBOL serialization syntax",
+            "Detected SBOL serializations are syntactically parseable by a generic parser.",
+            "not_applicable",
+            "medium",
+            0.95,
+            "No SBOL artifact was detected, so serialization parsing was not applicable.",
+            evidence=[_absence("No SBOL artifact was available for syntax inspection.")],
+            limitations=SBOL_LIMITATIONS,
+        )
+    evidence: list[Evidence] = []
+    failures: list[Evidence] = []
+    unsupported: list[Evidence] = []
+    for path in artifacts:
+        suffix = path.suffix.lower()
+        text = repo.text(path)
+        try:
+            if suffix in {".xml", ".rdf", ".sbol", ".sbol2"}:
+                ET.fromstring(text)
+            elif suffix in {".json", ".sbol3"}:
+                json.loads(text)
+            else:
+                unsupported.append(_evidence(repo, path, "Turtle/RDF-like syntax was detected but no Turtle parser is bundled in the static MVP.", "artifact", 0.9))
+                continue
+            evidence.append(_evidence(repo, path, "Generic serialization parser accepted the artifact.", "artifact", 0.9))
+        except (ET.ParseError, json.JSONDecodeError) as exc:
+            failures.append(_evidence(repo, path, f"Generic serialization parser rejected the artifact: {exc}.", "contradictory", 0.98))
+    if failures:
+        return _finding("SBOL-002", "SBOL serialization syntax", "Detected SBOL serializations are syntactically parseable by a generic parser.", "fail", "high", 0.98, "At least one detected SBOL serialization could not be parsed.", evidence=evidence + failures + unsupported, limitations=SBOL_LIMITATIONS, recommendation="Fix the serialization or add a domain-specific SBOL parser/validator to the profile.")
+    if unsupported and not evidence:
+        return _finding("SBOL-002", "SBOL serialization syntax", "Detected SBOL serializations are syntactically parseable by a generic parser.", "manual_review", "medium", 0.9, "SBOL-like Turtle/RDF artifacts were found, but a Turtle parser is not bundled in the static MVP.", evidence=unsupported, limitations=SBOL_LIMITATIONS, recommendation="Install or add an explicit SBOL/RDF validator and record its version and result.")
+    status = "manual_review" if unsupported else "pass"
+    message = "Generic parsers accepted the detected SBOL serializations." if not unsupported else "Some serializations parsed generically; Turtle/RDF artifacts require domain-specific review."
+    return _finding("SBOL-002", "SBOL serialization syntax", "Detected SBOL serializations are syntactically parseable by a generic parser.", status, "medium", 0.9, message, evidence=evidence + unsupported, limitations=SBOL_LIMITATIONS, recommendation="Run an SBOL-aware semantic validator; generic XML/JSON parsing is not sufficient." if status == "pass" else "Add an SBOL-aware Turtle/RDF validator for complete syntax coverage.")
+
+
+def check_sbol_version(repo: Repository) -> Finding:
+    context = _sbol_context_files(repo)
+    version_evidence: list[Evidence] = []
+    version_pattern = re.compile(r"(?i)\bSBOL\s*([23])(?:\.0(?:\.0)?)?\b|https?://sbols\.org/v([23])#")
+    for path in context:
+        text = repo.text(path)
+        for match in version_pattern.finditer(text):
+            version = match.group(1) or match.group(2)
+            line = text.count("\n", 0, match.start()) + 1
+            version_evidence.append(_evidence(repo, path, f"SBOL version {version} signal detected.", "declaration", 0.9, line, line))
+            break
+    if version_evidence:
+        return _finding("SBOL-003", "SBOL version declaration", "The repository identifies the SBOL version used by its artifacts or tooling.", "pass", "low", 0.9, "An SBOL 2 or SBOL 3 version signal was detected.", evidence=version_evidence[:10], limitations=SBOL_LIMITATIONS)
+    return _finding("SBOL-003", "SBOL version declaration", "The repository identifies the SBOL version used by its artifacts or tooling.", "unknown", "medium", 0.76, "An SBOL artifact was detected, but its SBOL version was not clear from the scanned text.", evidence=[_absence("No explicit SBOL 2 or SBOL 3 version signal was detected.")], limitations=SBOL_LIMITATIONS, recommendation="Declare the SBOL version and the versions of the libraries or validators used.")
+
+
+def check_sbol_validation_evidence(repo: Repository) -> Finding:
+    evidence: list[Evidence] = []
+    validation_terms = re.compile(r"(?i)\b(validate|validation|validator|libsbol|pysbol|sbol3\.validate)\b")
+    for path in repo.files():
+        if path.suffix.lower() not in {".py", ".r", ".js", ".ts", ".sh", ".yml", ".yaml", ".toml", ".md", ".txt"}:
+            continue
+        text = repo.text(path)
+        if "sbol" not in text.lower() or not validation_terms.search(text):
+            continue
+        evidence_type = "test" if any(part.lower() in {"test", "tests"} for part in repo.relative(path).split("/")) else "documentation"
+        evidence.append(_evidence(repo, path, "SBOL validation-related text was detected; execution was not performed.", evidence_type, 0.82, 1, max(1, len(text.splitlines()))))
+    if evidence:
+        return _finding("SBOL-004", "SBOL validation evidence", "The repository provides an explicit SBOL validation or validator-integration signal.", "manual_review", "high", 0.82, "SBOL validation-related evidence was found, but the validator was not executed.", evidence=evidence[:10], limitations=SBOL_LIMITATIONS, recommendation="Run the declared SBOL validator in CI and record the validator version and result.")
+    return _finding("SBOL-004", "SBOL validation evidence", "The repository provides an explicit SBOL validation or validator-integration signal.", "unknown", "high", 0.78, "No SBOL validation test or validator integration signal was detected.", evidence=[_absence("No SBOL validation-related test, command, or dependency was detected.")], limitations=SBOL_LIMITATIONS, recommendation="Add a deterministic SBOL validation test and run it in CI.")
+
+
+def check_sbol_interoperability(repo: Repository) -> Finding:
+    evidence: list[Evidence] = []
+    interoperability_terms = re.compile(r"(?i)\b(round[- ]?trip|interoperab|import|export|convert|serialize|deserializ)\b")
+    for path in repo.files():
+        if path.suffix.lower() not in {".py", ".r", ".js", ".ts", ".sh", ".yml", ".yaml", ".md", ".txt"}:
+            continue
+        text = repo.text(path)
+        if "sbol" in text.lower() and interoperability_terms.search(text):
+            evidence_type = "test" if any(part.lower() in {"test", "tests"} for part in repo.relative(path).split("/")) else "documentation"
+            evidence.append(_evidence(repo, path, "SBOL import/export, conversion, serialization, or round-trip signal detected; execution was not performed.", evidence_type, 0.78, 1, max(1, len(text.splitlines()))))
+    if evidence:
+        return _finding("SBOL-005", "SBOL interoperability evidence", "The repository provides an explicit SBOL interoperability or round-trip signal.", "manual_review", "medium", 0.78, "Interoperability-related evidence was found, but cross-tool behavior was not tested.", evidence=evidence[:10], limitations=SBOL_LIMITATIONS, recommendation="Add round-trip and cross-tool fixtures with exact tool versions and compare the resulting design semantics.")
+    return _finding("SBOL-005", "SBOL interoperability evidence", "The repository provides an explicit SBOL interoperability or round-trip signal.", "unknown", "medium", 0.74, "No SBOL interoperability or round-trip evidence was detected.", evidence=[_absence("No SBOL import/export, conversion, or round-trip signal was detected.")], limitations=SBOL_LIMITATIONS, recommendation="Add an interoperability test if the project exchanges SBOL designs with other tools.")
+
+
 GENERIC_CHECKS: tuple[Check, ...] = (check_readme, check_license, check_citation, check_tests, check_ci, check_dependencies, check_pinning, check_secrets)
 GENOMICS_CHECKS: tuple[Check, ...] = (check_workflow, check_workflow_paths, check_workflow_parameters, check_reference_provenance, check_genomic_validation, check_portability)
+SBOL_CHECKS: tuple[Check, ...] = (check_sbol_artifacts, check_sbol_syntax, check_sbol_version, check_sbol_validation_evidence, check_sbol_interoperability)
 
 

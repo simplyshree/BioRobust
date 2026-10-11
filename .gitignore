@@ -18,6 +18,10 @@ dist/
 # Generated BioRobust reports
 outputs/*.html
 outputs/*.json
+outputs/*.md
+
+# External repositories used for local validation pilots
+work/external/
 
 # Local editor and OS files
 .idea/
