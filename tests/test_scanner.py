@@ -118,6 +118,15 @@ class ScannerTests(unittest.TestCase):
         self.assertIn("REPRO-001", answer_stdout.getvalue())
         self.assertIn("static, evidence-grounded", answer_stdout.getvalue())
 
+    def test_cli_pdf_output(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT, ignore_cleanup_errors=True) as directory:
+            output = Path(directory) / "report.pdf"
+            self.assertEqual(
+                main(["scan", str(FIXTURE), "--profile", "genomics", "--format", "pdf", "--output", str(output)]),
+                0,
+            )
+            self.assertTrue(output.read_bytes().startswith(b"%PDF"))
+
     def test_invalid_profile_and_missing_path(self) -> None:
         with self.assertRaises(ValueError):
             scan(FIXTURE, "not-a-profile")

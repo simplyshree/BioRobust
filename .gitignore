@@ -19,6 +19,7 @@ dist/
 outputs/*.html
 outputs/*.json
 outputs/*.md
+outputs/*.pdf
 
 # Repositories cloned by `biorobust start URL`
 .biorobust/

@@ -31,18 +31,26 @@ biorobust start . --output biorobust-report.md
 code biorobust-report.md
 ```
 
+To create a shareable PDF instead:
+
+```powershell
+biorobust start . --format pdf --output biorobust-report.pdf
+```
+
 You can also start directly from a GitHub or other HTTP(S) Git URL. BioRobust clones it into `.biorobust/repos/` and reuses that local copy on later runs:
 
 ```powershell
 biorobust start https://github.com/OWNER/PROJECT.git
 ```
 
-The `start` command creates a Markdown onboarding report. For automation or browser viewing:
+The `start` command creates a Markdown onboarding report by default. For automation or browser viewing:
 
 ```powershell
 biorobust scan project --profile auto --format json --output project-BioRobust.json
 biorobust scan project --profile auto --format html --output project-BioRobust.html
 ```
+
+The available report formats are `markdown` for onboarding and review, `pdf` for sharing or archiving, `json` for automation and CI, and `html` for browser viewing.
 
 The scanner can also run without installation:
 
@@ -84,6 +92,9 @@ Answers include the relevant rule, status, and evidence. Treat `unknown` and `ma
 ```powershell
 # Human-readable onboarding document
 biorobust start project --format markdown --output report.md
+
+# Shareable PDF report
+biorobust start project --format pdf --output report.pdf
 
 # Machine-readable report for CI or scripts
 biorobust scan project --profile auto --format json --output report.json

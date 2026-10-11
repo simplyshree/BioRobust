@@ -10,7 +10,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from . import __version__
-from .reporting import write_html, write_json, write_markdown
+from .reporting import write_html, write_json, write_markdown, write_pdf
 from .rules import RULE_BY_ID, RULE_PACK_VERSION, RULES
 from .scanner import PROFILES, scan
 
@@ -23,13 +23,13 @@ def build_parser() -> argparse.ArgumentParser:
     scan_parser = subparsers.add_parser("scan", help="Scan a local repository without executing its code")
     scan_parser.add_argument("path", nargs="?", default=".", help="Repository directory")
     scan_parser.add_argument("--profile", choices=["auto", *sorted(PROFILES)], default="bioinformatics", help="Check profile")
-    scan_parser.add_argument("--format", choices=("json", "html", "markdown"), default="json", help="Report format")
+    scan_parser.add_argument("--format", choices=("json", "html", "markdown", "pdf"), default="json", help="Report format")
     scan_parser.add_argument("--output", type=Path, help="Write the report to a file instead of stdout")
 
     start_parser = subparsers.add_parser("start", help="Create a first-pass report from a local repository or Git URL")
     start_parser.add_argument("path", nargs="?", default=".", help="Repository directory or Git URL")
     start_parser.add_argument("--profile", choices=["auto", *sorted(PROFILES)], default="auto", help="Check profile")
-    start_parser.add_argument("--format", choices=("json", "html", "markdown"), default="markdown", help="Report format")
+    start_parser.add_argument("--format", choices=("json", "html", "markdown", "pdf"), default="markdown", help="Report format")
     start_parser.add_argument("--output", type=Path, help="Write the report to a file instead of stdout")
 
     subparsers.add_parser("rules", help="List the versioned rule pack")
@@ -128,6 +128,23 @@ def _answer_question(path: str, question: str, profile: str) -> int:
     return 0
 
 
+def _write_report(report, report_format: str, output: Path | None) -> None:
+    if report_format == "pdf":
+        if output:
+            with output.open("wb") as stream:
+                write_pdf(report, stream)
+        else:
+            write_pdf(report, sys.stdout.buffer)
+        return
+
+    writer = {"json": write_json, "html": write_html, "markdown": write_markdown}[report_format]
+    if output:
+        with output.open("w", encoding="utf-8") as stream:
+            writer(report, stream)
+    else:
+        writer(report, sys.stdout)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "rules":
@@ -151,17 +168,9 @@ def main(argv: list[str] | None = None) -> int:
         report = scan(target, args.profile)
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
-            with args.output.open("w", encoding="utf-8") as stream:
-                writer = {"json": write_json, "html": write_html, "markdown": write_markdown}[args.format]
-                writer(report, stream)
-        elif args.format == "json":
-            write_json(report, sys.stdout)
-        elif args.format == "html":
-            write_html(report, sys.stdout)
-        else:
-            write_markdown(report, sys.stdout)
+        _write_report(report, args.format, args.output)
         return 0
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
+    except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         print(f"biorobust: {exc}", file=sys.stderr)
         return 2
 
