@@ -14,15 +14,21 @@ from .scanner import PROFILES, scan
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="biorobust", description="Evidence-based robustness profiling for genomic repositories.")
+    parser = argparse.ArgumentParser(prog="biorobust", description="Evidence-based robustness profiling for open-source biological and genomic software.")
     parser.add_argument("--version", action="version", version=__version__)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     scan_parser = subparsers.add_parser("scan", help="Scan a local repository without executing its code")
     scan_parser.add_argument("path", nargs="?", default=".", help="Repository directory")
-    scan_parser.add_argument("--profile", choices=["auto", *sorted(PROFILES)], default="genomics", help="Check profile")
+    scan_parser.add_argument("--profile", choices=["auto", *sorted(PROFILES)], default="bioinformatics", help="Check profile")
     scan_parser.add_argument("--format", choices=("json", "html", "markdown"), default="json", help="Report format")
     scan_parser.add_argument("--output", type=Path, help="Write the report to a file instead of stdout")
+
+    start_parser = subparsers.add_parser("start", help="Create a first-pass onboarding report for understanding and replication")
+    start_parser.add_argument("path", nargs="?", default=".", help="Repository directory")
+    start_parser.add_argument("--profile", choices=["auto", *sorted(PROFILES)], default="auto", help="Check profile")
+    start_parser.add_argument("--format", choices=("json", "html", "markdown"), default="markdown", help="Report format")
+    start_parser.add_argument("--output", type=Path, help="Write the report to a file instead of stdout")
 
     subparsers.add_parser("rules", help="List the versioned rule pack")
     subparsers.add_parser("profiles", help="List available domain profiles")
@@ -67,10 +73,9 @@ def _answer_question(path: str, question: str, profile: str) -> int:
     keyword_groups = {
         "reproducibility": {"REPRO-001", "DNA-PORT-001", "CI-001"},
         "portable": {"DNA-PORT-001", "REPRO-001"},
-        "test": {"TEST-001", "DNA-VAL-001", "SBOL-004"},
-        "valid": {"DNA-VAL-001", "SBOL-002", "SBOL-004"},
+        "test": {"TEST-001", "DNA-VAL-001"},
+        "valid": {"DNA-VAL-001"},
         "reference": {"DNA-REF-001"},
-        "sbol": {"SBOL-001", "SBOL-002", "SBOL-003", "SBOL-004", "SBOL-005"},
         "license": {"META-001"},
         "document": {"DOC-001", "META-002"},
         "security": {"SEC-001"},
@@ -108,7 +113,7 @@ def main(argv: list[str] | None = None) -> int:
         except (OSError, ValueError, json.JSONDecodeError) as exc:
             print(f"biorobust: {exc}", file=sys.stderr)
             return 2
-    if args.command != "scan":
+    if args.command not in {"scan", "start"}:
         return 2
     try:
         report = scan(args.path, args.profile)

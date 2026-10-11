@@ -92,25 +92,25 @@ class ScannerTests(unittest.TestCase):
         profiles_stdout = io.StringIO()
         with contextlib.redirect_stdout(profiles_stdout):
             self.assertEqual(main(["profiles"]), 0)
-        self.assertIn("sbol", profiles_stdout.getvalue())
+        self.assertIn("bioinformatics", profiles_stdout.getvalue())
 
-    def test_sbol_profile_is_conservative_and_auto_detected(self) -> None:
-        fixture = ROOT / "fixtures" / "sbol_repo"
-        report = scan(fixture, "sbol")
-        by_id = {finding.rule_id: finding for finding in report.findings}
-        self.assertEqual(by_id["SBOL-001"].status, "pass")
-        self.assertEqual(by_id["SBOL-002"].status, "pass")
-        self.assertEqual(by_id["SBOL-003"].status, "pass")
-        self.assertEqual(by_id["SBOL-004"].status, "manual_review")
-        self.assertEqual(by_id["SBOL-005"].status, "manual_review")
-        auto = scan(fixture, "auto")
-        self.assertEqual(auto.profile, "sbol")
+    def test_auto_selects_bioinformatics_or_workflow_profiles(self) -> None:
+        auto = scan(FIXTURE, "auto")
+        self.assertEqual(auto.profile, "genomics-workflow")
+
+        tool = ROOT / "fixtures" / "bioinformatics_tool_repo"
+        self.assertEqual(scan(tool, "auto").profile, "bioinformatics")
 
     def test_markdown_report_and_grounded_question(self) -> None:
         markdown_stdout = io.StringIO()
         with contextlib.redirect_stdout(markdown_stdout):
             self.assertEqual(main(["scan", str(FIXTURE), "--format", "markdown"]), 0)
         self.assertIn("# BioRobust evidence report", markdown_stdout.getvalue())
+
+        start_stdout = io.StringIO()
+        with contextlib.redirect_stdout(start_stdout):
+            self.assertEqual(main(["start", str(FIXTURE)]), 0)
+        self.assertIn("# BioRobust evidence report", start_stdout.getvalue())
 
         answer_stdout = io.StringIO()
         with contextlib.redirect_stdout(answer_stdout):

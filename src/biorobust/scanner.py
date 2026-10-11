@@ -19,7 +19,7 @@ SCANNER_LIMITATIONS = [
 ]
 
 
-def scan(path: str | Path, profile: str = "genomics") -> ScanReport:
+def scan(path: str | Path, profile: str = "bioinformatics") -> ScanReport:
     repo = Repository(Path(path))
     resolved_profile, definition = resolve_profile(repo, profile)
     findings = [check(repo) for check in definition.checks]

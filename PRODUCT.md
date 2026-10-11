@@ -41,8 +41,7 @@ Give a user a fast, reproducible report about the observable robustness signals 
 - Missing evidence is represented as `unknown` or `manual_review`, not silently treated as a pass.
 - Placeholder checksum text, generic portability prose, mutable image tags, and `assert True` do not produce scientific `pass` findings.
 - A genomics fixture demonstrates detection of workflow, reference provenance, validation data, and portability signals with real local artifacts.
-- The scanner supports explicit `generic`, `genomics`, `genomics-workflow`, and `sbol` profiles plus conservative `auto` selection.
-- SBOL checks never claim semantic validity from generic parsing alone.
+- The scanner supports explicit `generic`, `bioinformatics`, `genomics`, and `genomics-workflow` profiles plus conservative `auto` selection.
 - A scan can emit JSON, Markdown, or HTML without changing the evidence model.
 - `biorobust ask PATH QUESTION` answers from local findings and states that it did not execute repository code.
 - A cloned external repository can be scanned using only its local path.
@@ -52,7 +51,7 @@ Give a user a fast, reproducible report about the observable robustness signals 
 - Adapter interfaces for WorkflowHub, Bioconda, OSV, OpenSSF Scorecard, RO-Crate, and GA4GH metadata.
 - Optional sandboxed dry runs for selected workflow engines.
 - Versioned rule packs for RNA-seq, metagenomics, neuroscience, machine-learning biology, and other domains.
-- A semantic SBOL adapter and opt-in sandboxed execution only after the static evidence model is calibrated.
+- Domain adapters and opt-in sandboxed execution only after the static evidence model is calibrated.
 - Maintainer-facing badges only after the underlying evidence model has been validated with real repositories.
 - Pilot calibration over 15–30 pinned external repositories, as described in [docs/validation-plan.md](docs/validation-plan.md).
 

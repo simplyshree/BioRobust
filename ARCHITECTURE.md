@@ -28,11 +28,16 @@ Repository inspector -> profile resolver -> profile checks -> Finding objects ->
 
 ## Profiles
 
-The current registry contains `generic`, `genomics`, `genomics-workflow`, and
-`sbol`. A profile is a named tuple of checks, a description, and a conservative
-detector. The SBOL profile is intentionally evidence-oriented: generic XML/JSON
-parsing can report serialization evidence, but the report remains `manual_review`
-or `unknown` where SBOL semantic or interoperability validation would be needed.
+The current registry contains `generic`, `bioinformatics`, `genomics`, and
+`genomics-workflow`. A profile is a named tuple of checks, a description, and a
+conservative detector. The `bioinformatics` profile is the main starter profile
+for genomic repositories and open-source genomic tools, including projects that
+do not contain sequence files but document their computational biology purpose.
+
+The `start` command is the onboarding entry point: it runs a local scan and
+writes a Markdown review document that helps a user understand the repository,
+trace its inputs and outputs, and identify the prerequisites for a controlled
+replication attempt.
 
 New domains should add a profile and fixtures rather than adding domain-specific
 heuristics to generic checks. A future external plugin API can wrap the same

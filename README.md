@@ -1,22 +1,16 @@
 # BioRobust
 
-BioRobust is an evidence-first scanner for open-source biological, genomic, and SBOL repositories. It produces a reviewable report about documentation, tests, dependencies, workflows, reference data, validation evidence, and portability.
+BioRobust is a local, evidence-first starter skill for open-source genomic and bioinformatics software. Use it at the beginning of a project to understand what a repository does, decipher how it is organized, and identify what is needed to reproduce or safely extend it.
 
-It does not certify scientific correctness, security, clinical fitness, or biological truth. A result is a structured starting point for review.
+It produces a reviewable report about documentation, tests, dependencies, workflows, reference data, validation evidence, security signals, and portability. It does not certify scientific correctness or execute repository code.
 
-## Current capabilities
+## What it helps you do
 
-- Scans without executing repository code.
-- Checks project documentation, licensing, citation metadata, tests, CI, dependencies, pinning, and common credential exposure patterns.
-- Detects Nextflow, Snakemake, CWL, and WDL workflow definitions.
-- Looks for reference-genome provenance, known-answer validation, and portable execution environments.
-- Represents `pass`, `fail`, `unknown`, `not_applicable`, and `manual_review` explicitly.
-- Records structured evidence with repository-relative paths, line locations, observations, evidence type, and detector confidence.
-- Records a deterministic repository manifest hash and rule-pack version.
-- Emits a stable JSON report for automation and a compact HTML report for humans.
-- Provides an `auto` profile that selects `generic`, `genomics`, or `sbol` from narrow repository signals.
-- Provides a conservative `sbol` profile for artifact detection, generic serialization parsing, version signals, validation evidence, and interoperability evidence.
-- Provides a terminal `ask` command that answers questions from the local evidence report without network access or repository execution.
+- Understand the repository’s purpose, entry points, workflows, inputs, outputs, tests, and environment declarations.
+- Decipher whether important claims are supported by observable files and configuration.
+- Replicate a documented workflow by checking references, expected outputs, dependency pins, and portability signals.
+- Compare repositories using stable rule IDs, structured evidence, and deterministic manifest hashes.
+- Ask focused questions in the terminal after cloning, without sending code to an online AI service.
 
 ## Quick start
 
@@ -26,42 +20,36 @@ python -m venv .venv
 python -m pip install -e ".[test]"
 
 git clone https://github.com/OWNER/PROJECT.git project
-biorobust scan project --profile auto --format markdown --output project-BioRobust.md
+biorobust start project --output project-BioRobust.md
 ```
 
-The scanner is also runnable without installation:
+The `start` command is the recommended first pass. It creates a Markdown onboarding report. For automation or browser viewing:
 
 ```powershell
-python -m biorobust scan path\to\repository --profile genomics
+biorobust scan project --profile auto --format json --output project-BioRobust.json
+biorobust scan project --profile auto --format html --output project-BioRobust.html
+```
+
+The scanner can also run without installation:
+
+```powershell
+python -m biorobust scan path\to\repository --profile bioinformatics
 ```
 
 ## Profiles
 
 | Profile | Use it for |
 |---|---|
-| `auto` | Choose from repository signals |
-| `generic` | General scientific software and libraries |
-| `genomics` | FASTQ, BAM/CRAM, VCF, FASTA, variant, annotation, and sequence workflows |
-| `genomics-workflow` | Nextflow, Snakemake, CWL, or WDL repositories |
-| `sbol` | SBOL artifacts, SBOL libraries, and synthetic-biology tooling |
+| `auto` | Choose a useful profile from narrow repository signals |
+| `generic` | Any open-source scientific or computational software repository |
+| `bioinformatics` | Genomic repositories and bioinformatics libraries, packages, and command-line tools |
+| `genomics` | The genomics-focused rule pack, retained for compatibility |
+| `genomics-workflow` | Repositories centered on Nextflow, Snakemake, CWL, or WDL |
+
+Use `auto` when unsure. It selects the workflow profile when a supported workflow is present, the bioinformatics profile when genomic or bioinformatics signals are visible, and the generic profile otherwise.
 
 ```powershell
 biorobust profiles
-```
-
-Use `auto` when unsure. Use an explicit profile when you want a specific rule pack.
-
-## Output formats
-
-```powershell
-# Human-readable review document
-biorobust scan project --profile auto --format markdown --output report.md
-
-# Machine-readable report for CI or scripts
-biorobust scan project --profile auto --format json --output report.json
-
-# Browser-friendly report
-biorobust scan project --profile auto --format html --output report.html
 ```
 
 ## Ask questions in the terminal
@@ -69,20 +57,26 @@ biorobust scan project --profile auto --format html --output report.html
 Questions are answered from a fresh local scan. They do not call an online AI service:
 
 ```powershell
+biorobust ask project "What does this repository appear to do?"
 biorobust ask project "Is this repository reproducible?"
-biorobust ask project "What SBOL validation evidence exists?" --profile sbol
+biorobust ask project "What inputs, references, and validation evidence should I inspect?"
 biorobust ask project "Are there obvious credential risks?"
 ```
 
-Answers include the relevant rule, status, and evidence. Treat `unknown` and `manual_review` as requests for further investigation, not as failures.
+Answers include the relevant rule, status, and evidence. Treat `unknown` and `manual_review` as requests for investigation, not as failures.
 
-## Scope of v0.3
+## Output and interpretation
 
-The first product wedge remains open-source computational genomics repositories, especially sequencing and variant-calling workflows using FASTQ, BAM/CRAM, VCF, and reference FASTA files. The extensible profile layer now also supports a conservative SBOL profile. Nextflow and Snakemake are the primary workflow targets. Generic repository checks remain useful for stand-alone command-line tools and future biological domains.
+```powershell
+# Human-readable onboarding document
+biorobust start project --format markdown --output report.md
 
-Neuroscience, clinical certification, wet-lab protocols, human-genomic privacy certification, and AI-code detection are deliberately out of scope for this release.
+# Machine-readable report for CI or scripts
+biorobust scan project --profile auto --format json --output report.json
 
-## Interpret the result
+# Browser-friendly report
+biorobust scan project --profile auto --format html --output report.html
+```
 
 | Status | Meaning |
 |---|---|
@@ -92,15 +86,21 @@ Neuroscience, clinical certification, wet-lab protocols, human-genomic privacy c
 | `manual_review` | Human or domain-specific validation is required |
 | `not_applicable` | The criterion does not apply |
 
-`pass` does not mean scientifically correct. For example, a valid checksum proves file-identity evidence, not that the reference genome is biologically appropriate.
+`pass` does not mean scientifically correct. A valid checksum supports file identity, for example, but does not prove that a reference assembly is biologically appropriate.
 
 Inspect the rule catalog:
 
 ```powershell
 biorobust rules
 biorobust explain DNA-REF-001
-biorobust explain SBOL-004
+biorobust explain TEST-001
 ```
+
+## Scope
+
+The primary target is open-source genomic and bioinformatics software: sequence-analysis tools, variant callers, annotation tools, reference-data packages, Python/R/JavaScript libraries, command-line programs, and workflow repositories. The same generic checks can be used for adjacent scientific software.
+
+The scanner is deliberately static and local. It does not import or execute target code, fetch external reference data, run workflow engines, prove scientific validity, or provide clinical certification. Replication support means identifying the evidence and missing prerequisites needed for a human-controlled reproduction attempt.
 
 ## Development
 
@@ -108,20 +108,13 @@ biorobust explain SBOL-004
 python -m unittest discover -s tests
 ```
 
-The test fixtures under `tests/fixtures` are intentionally small and synthetic. They exercise evidence behavior, including missing references, placeholder checksums, mutable containers, missing expected outputs, and non-substantive `assert True` tests; they do not validate a real variant caller.
-
-## Scientific interpretation
-
-BioRobust can establish that observable repository artifacts support or fail a narrowly defined claim. It cannot establish that a method is biologically correct, that a reference is appropriate, that a workflow will run in every environment, or that a repository is clinically or scientifically certified. See [docs/validation-plan.md](docs/validation-plan.md) before interpreting future calibration results.
+The fixtures under `tests/fixtures` are small and synthetic. They exercise evidence behavior, including missing references, placeholder checksums, mutable containers, missing expected outputs, non-substantive tests, and a bioinformatics tool that has no sequence files but is discoverable from its metadata.
 
 ## Repository guide
 
-- [PRODUCT.md](PRODUCT.md) defines the user problem and v0.1 boundary.
+- [PRODUCT.md](PRODUCT.md) defines the user problem and v0.3 boundary.
 - [ARCHITECTURE.md](ARCHITECTURE.md) explains the scanner design.
 - [AGENT.md](AGENT.md) contains collaboration and change rules.
 - [ADR-001.md](ADR-001.md) records the local-first, evidence-first decision.
-- [ADR-002.md](ADR-002.md) records the profile, review-document, and terminal-question decision.
-- [docs/pilot-results.md](docs/pilot-results.md) records the first local SBOL and SeqTrainer pilot scans.
+- [ADR-002.md](ADR-002.md) records the profile, onboarding-document, and terminal-question decision.
 - [schemas/report.schema.json](schemas/report.schema.json) defines the JSON contract.
-
-
