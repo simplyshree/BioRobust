@@ -36,6 +36,7 @@ BIOINFORMATICS_MARKERS = (
     "bioinformatics", "computational genomics", "genomic analysis", "sequence analysis",
     "variant calling", "rna-seq", "rnaseq", "single-cell", "metagenomics", "sequencing",
     "fastq", "bam", "cram", "vcf", "fasta", "gff", "gtf", "genome assembly",
+    "synthetic biology", "synbiohub", "sequence design", "dna",
 )
 
 
