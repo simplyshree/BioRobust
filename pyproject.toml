@@ -22,8 +22,15 @@ dependencies = ["reportlab>=4"]
 [project.scripts]
 biorobust = "biorobust.cli:main"
 
+[project.urls]
+Homepage = "https://github.com/simplyshree/BioRobust"
+Repository = "https://github.com/simplyshree/BioRobust"
+Issues = "https://github.com/simplyshree/BioRobust/issues"
+Documentation = "https://github.com/simplyshree/BioRobust#readme"
+
 [project.optional-dependencies]
 test = ["jsonschema>=4", "pytest>=7"]
+release = ["build>=1", "twine>=5"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

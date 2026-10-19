@@ -130,6 +130,38 @@ The current project provides broad repository checks and a focused genomic rule 
 
 The scanner is deliberately static and local. It does not import or execute target code, make network requests during a local scan, retrieve external reference data, run workflow engines, prove biological validity, or provide clinical certification. Replication support means identifying the evidence and missing prerequisites needed for a human-controlled reproduction attempt.
 
+## Install as software
+
+For the current development version:
+
+```powershell
+python -m pip install "biorobust @ git+https://github.com/simplyshree/BioRobust.git@main"
+biorobust --version
+```
+
+For local development and contributions:
+
+```powershell
+python -m pip install -e ".[test]"
+```
+
+After a numbered PyPI release is published, the normal user installation will be:
+
+```powershell
+python -m pip install biorobust
+```
+
+See [RELEASING.md](RELEASING.md) for the versioning and GitHub Release process.
+
+## Repository layout
+
+- `src/biorobust/` contains the installable CLI and evidence model.
+- `tests/` contains deterministic unit tests and small synthetic fixtures.
+- `docs/` contains validation and launch material.
+- `schemas/` contains the machine-readable report contract.
+
+For AI-assisted changes, read [PRODUCT.md](PRODUCT.md), [ARCHITECTURE.md](ARCHITECTURE.md), and [AGENT.md](AGENT.md) before editing. Plans should preserve the evidence trail; generated conclusions must not be treated as evidence.
+
 ## Development
 
 ```powershell
@@ -139,6 +171,10 @@ python -m unittest discover -s tests -v
 The CI workflow tests supported Python versions, scans the genomics fixture, and performs a PDF smoke test for the broader biology fixture. The fixtures under `tests/fixtures` are small and synthetic so they remain deterministic.
 
 There is no container or hosted service required for v0.4. The supported runtime is a local Python CLI. A future sandboxed execution adapter must be opt-in, resource-limited, and separately documented.
+
+## Release
+
+BioRobust uses semantic-style versions such as `0.4.0`. The version must match in `pyproject.toml` and `src/biorobust/__init__.py`. A release is made from a Git tag such as `v0.4.0`; GitHub Actions builds the source archive and wheel and attaches them to a GitHub Release. PyPI publication is intentionally a separate maintainer decision.
 
 ## Repository guide
 

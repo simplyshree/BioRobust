@@ -16,7 +16,7 @@ from .scanner import PROFILES, scan
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="biorobust", description="Evidence-based robustness profiling for open-source biological and genomic software.")
+    parser = argparse.ArgumentParser(prog="biorobust", description="Evidence-first repository analysis for open-source biological and scientific software.")
     parser.add_argument("--version", action="version", version=__version__)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
