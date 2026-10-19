@@ -4,12 +4,16 @@ BioRobust is not scientifically validated by the existence of this plan. The pur
 
 ## Pilot corpus
 
-Assemble 15–30 public genomic repositories, pinned to a release tag or commit. Cover:
+Assemble 15–30 public biological and scientific software repositories, pinned to
+a release tag or commit. Cover:
 
-- Variant calling, RNA-seq, and metagenomics.
+- Genomics, variant calling, RNA-seq, metagenomics, and sequence analysis.
+- Proteomics, metabolomics, synthetic biology, neuroscience, imaging, systems
+  biology, ecology, and computational biology.
 - Nextflow and Snakemake, with a smaller CWL/WDL sample if available.
 - Strong, mixed, and weak documentation/reproducibility practices.
-- Stand-alone command-line tools and end-to-end workflows.
+- Stand-alone libraries, command-line tools, specifications, and end-to-end
+  workflows.
 
 Record repository URL, pinned commit/release, license, workflow engine, domain, and the reason for inclusion. Do not place external repositories in the normal unit-test suite; they change independently and may be unavailable.
 
@@ -41,6 +45,8 @@ Store a versioned table outside the unit-test fixtures with columns for reposito
 
 ## Claim boundary
 
-Until this pilot is completed and reviewed, describe BioRobust as an evidence profiler under calibration. Do not describe it as scientifically validated, clinically certified, or a proof of reproducibility.
+Until this pilot is completed and reviewed, describe BioRobust as an evidence
+profiler under calibration. Do not describe it as scientifically validated,
+clinically certified, or a proof of reproducibility.
 
 

@@ -36,7 +36,16 @@ BIOINFORMATICS_MARKERS = (
     "bioinformatics", "computational genomics", "genomic analysis", "sequence analysis",
     "variant calling", "rna-seq", "rnaseq", "single-cell", "metagenomics", "sequencing",
     "fastq", "bam", "cram", "vcf", "fasta", "gff", "gtf", "genome assembly",
-    "synthetic biology", "synbiohub", "sequence design", "dna",
+    "genome", "dna sequence", "reference genome", "gene annotation",
+)
+BIOLOGY_MARKERS = BIOINFORMATICS_MARKERS + (
+    "biology", "biological", "life science", "life-science", "molecular biology",
+    "cell biology", "structural biology", "systems biology", "synthetic biology",
+    "synbio", "synbiohub", "sequence design", "dna", "transcriptomics",
+    "gene expression", "spatial transcriptomics", "proteomics", "proteome",
+    "protein structure", "protein folding", "metabolomics", "metabolome",
+    "neuroscience", "neurobiology", "neuroimaging", "neuron", "brain imaging", "microscopy",
+    "bioimage", "biological imaging", "phenotyping", "ecology", "evolutionary biology",
 )
 
 
@@ -55,6 +64,17 @@ def _has_genomics_signal(repo: Repository) -> bool:
     return False
 
 
+def _has_biology_signal(repo: Repository) -> bool:
+    """Detect broad biological software without applying genomic-only checks."""
+    for path in repo.files():
+        if path.name.lower() not in BIOINFORMATICS_TEXT_NAMES:
+            continue
+        text = repo.text(path, limit=40_000).lower()
+        if any(marker in text for marker in BIOLOGY_MARKERS):
+            return True
+    return False
+
+
 def _has_workflow_signal(repo: Repository) -> bool:
     return any(path.name.lower() in WORKFLOW_NAMES or path.suffix.lower() in WORKFLOW_SUFFIXES for path in repo.files())
 
@@ -65,6 +85,12 @@ PROFILES: dict[str, ProfileDefinition] = {
         "Repository documentation, metadata, tests, CI, dependencies, and obvious credential patterns.",
         GENERIC_CHECKS,
         _always,
+    ),
+    "biology": ProfileDefinition(
+        "biology",
+        "General evidence for open-source biological and life-science software without assuming genomic inputs or workflows.",
+        GENERIC_CHECKS,
+        _has_biology_signal,
     ),
     "genomics": ProfileDefinition(
         "genomics",
@@ -94,6 +120,8 @@ def resolve_profile(repo: Repository, requested: str) -> tuple[str, ProfileDefin
             requested = "genomics-workflow"
         elif _has_genomics_signal(repo):
             requested = "bioinformatics"
+        elif _has_biology_signal(repo):
+            requested = "biology"
         else:
             requested = "generic"
     try:

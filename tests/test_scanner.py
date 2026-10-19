@@ -101,6 +101,23 @@ class ScannerTests(unittest.TestCase):
         tool = ROOT / "fixtures" / "bioinformatics_tool_repo"
         self.assertEqual(scan(tool, "auto").profile, "bioinformatics")
 
+    def test_auto_selects_biology_or_generic_profiles(self) -> None:
+        biology = ROOT / "fixtures" / "biology_tool_repo"
+        biology_report = scan(biology, "auto")
+        self.assertEqual(biology_report.profile, "biology")
+        self.assertFalse(any(finding.rule_id.startswith("DNA-") for finding in biology_report.findings))
+
+        cli_stdout = io.StringIO()
+        with contextlib.redirect_stdout(cli_stdout):
+            self.assertEqual(main(["scan", str(biology), "--format", "json"]), 0)
+        self.assertEqual(json.loads(cli_stdout.getvalue())["profile"], "biology")
+
+        generic = ROOT / "fixtures" / "documentation_only"
+        self.assertEqual(scan(generic, "auto").profile, "generic")
+
+        explicit = scan(biology, "generic")
+        self.assertEqual(explicit.profile, "generic")
+
     def test_markdown_report_and_grounded_question(self) -> None:
         markdown_stdout = io.StringIO()
         with contextlib.redirect_stdout(markdown_stdout):

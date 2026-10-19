@@ -22,7 +22,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     scan_parser = subparsers.add_parser("scan", help="Scan a local repository without executing its code")
     scan_parser.add_argument("path", nargs="?", default=".", help="Repository directory")
-    scan_parser.add_argument("--profile", choices=["auto", *sorted(PROFILES)], default="bioinformatics", help="Check profile")
+    scan_parser.add_argument("--profile", choices=["auto", *sorted(PROFILES)], default="auto", help="Check profile")
     scan_parser.add_argument("--format", choices=("json", "html", "markdown", "pdf"), default="json", help="Report format")
     scan_parser.add_argument("--output", type=Path, help="Write the report to a file instead of stdout")
 

@@ -1,4 +1,4 @@
-"""BioRobust: evidence-based robustness profiling for genomic software."""
+"""BioRobust: evidence-first repository analysis for biological software."""
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 

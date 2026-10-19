@@ -19,4 +19,5 @@ jobs:
       - run: python -m pip install -e ".[test]"
       - run: python -m unittest discover -s tests -v
       - run: python -m biorobust scan tests/fixtures/genomics_repo --profile genomics --format json --output /tmp/biorobust-report.json
+      - run: python -m biorobust scan tests/fixtures/biology_tool_repo --format pdf --output /tmp/biorobust-biology-report.pdf
 

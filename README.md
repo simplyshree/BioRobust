@@ -1,16 +1,22 @@
 # BioRobust
 
-BioRobust is a local, evidence-first starter skill for open-source genomic and bioinformatics software. Use it at the beginning of a project to understand what a repository does, decipher how it is organized, and identify what is needed to reproduce or safely extend it.
+BioRobust is a free, open-source, local-first tool for understanding unfamiliar biological and scientific software repositories before you run, reuse, or extend them.
 
-It produces a reviewable report about documentation, tests, dependencies, workflows, reference data, validation evidence, security signals, and portability. It does not certify scientific correctness or execute repository code.
+It creates evidence-backed reports about documentation, tests, dependencies, workflows, reference data, validation signals, security patterns, and portability. It makes uncertainty visible instead of hiding everything behind a single score.
 
-## What it helps you do
+BioRobust is useful for genomics, bioinformatics, transcriptomics, proteomics, metabolomics, synthetic biology, neuroscience, biological imaging, systems biology, ecology, and adjacent open-source scientific software.
 
-- Understand the repository’s purpose, entry points, workflows, inputs, outputs, tests, and environment declarations.
-- Decipher whether important claims are supported by observable files and configuration.
-- Replicate a documented workflow by checking references, expected outputs, dependency pins, and portability signals.
-- Compare repositories using stable rule IDs, structured evidence, and deterministic manifest hashes.
-- Ask focused questions in the terminal after cloning, without sending code to an online AI service.
+It does not certify scientific correctness, clinical suitability, security, or AI-generated code quality. The default scanner is static: it does not import or execute repository code and does not send repository contents to an online AI service.
+
+## What it does
+
+- Helps researchers understand the purpose, entry points, inputs, outputs, and setup of an unfamiliar repository.
+- Helps maintainers identify missing documentation, tests, dependency constraints, licenses, citation metadata, and portability evidence.
+- Helps reviewers prepare a controlled reproduction or reuse attempt by showing what evidence exists and what is missing.
+- Produces Markdown, PDF, HTML, and JSON reports from the same evidence model.
+- Answers focused questions in the terminal from a fresh local scan.
+- Keeps stable rule IDs, evidence locations, confidence, limitations, and a deterministic manifest hash in every report.
+- Supports AI-assisted repository exploration without replacing the underlying local evidence trail.
 
 ## Quick start
 
@@ -24,92 +30,85 @@ cd path\to\repository
 biorobust start .
 ```
 
-That is the normal workflow: open the repository folder and run one command. To save the report for VS Code:
+The normal workflow is one command from the repository folder. `start` uses the `auto` profile, creates a Markdown onboarding report by default, and does not execute the target project.
 
-```powershell
-biorobust start . --output biorobust-report.md
-code biorobust-report.md
-```
-
-To create a shareable PDF instead:
-
-```powershell
-New-Item -ItemType Directory -Force output\pdf | Out-Null
-biorobust start . --format pdf --output output\pdf\biorobust-report.pdf
-```
-
-Generated PDFs are local review artifacts and are ignored by Git. Use the same pattern for a cloned project:
-
-```powershell
-biorobust start https://github.com/OWNER/PROJECT.git --format pdf --output output\pdf\PROJECT-BioRobust.pdf
-```
-
-You can also start directly from a GitHub or other HTTP(S) Git URL. BioRobust clones it into `.biorobust/repos/` and reuses that local copy on later runs:
+To start directly from a GitHub or other HTTP(S) Git URL:
 
 ```powershell
 biorobust start https://github.com/OWNER/PROJECT.git
 ```
 
-The `start` command creates a Markdown onboarding report by default. For automation or browser viewing:
+BioRobust clones the repository into `.biorobust/repos/` and reuses that local copy on later runs.
+
+## Reports and terminal questions
 
 ```powershell
-biorobust scan project --profile auto --format json --output project-BioRobust.json
-biorobust scan project --profile auto --format html --output project-BioRobust.html
+# Markdown onboarding report
+biorobust start . --format markdown --output report.md
+
+# Shareable PDF report
+New-Item -ItemType Directory -Force output\pdf | Out-Null
+biorobust start . --format pdf --output output\pdf\report.pdf
+
+# Machine-readable report for CI or scripts
+biorobust scan . --format json --output report.json
+
+# Browser-friendly report
+biorobust scan . --format html --output report.html
+
+# Evidence-grounded terminal questions
+biorobust ask . "What does this repository appear to do?"
+biorobust ask . "What would I need to reproduce its main workflow?"
+biorobust ask . "What evidence is missing before I reuse this tool?"
 ```
 
-The available report formats are `markdown` for onboarding and review, `pdf` for sharing or archiving, `json` for automation and CI, and `html` for browser viewing.
+Generated PDFs and other local report artifacts are ignored by Git. The available formats are `markdown` for onboarding, `pdf` for sharing or archiving, `html` for browser viewing, and `json` for automation.
 
-The scanner can also run without installation:
+## How the workflow works
 
-```powershell
-python -m biorobust scan path\to\repository --profile bioinformatics
+```text
+local folder or Git URL
+        |
+        v
+automatic profile selection
+        |
+        v
+static evidence scan
+        |
+        v
+Markdown, PDF, HTML, or JSON report
+        |
+        v
+grounded terminal questions
 ```
 
 ## Profiles
 
 | Profile | Use it for |
 |---|---|
-| `auto` | Choose a useful profile from narrow repository signals |
+| `auto` | Choose the least-specialized useful profile from explainable repository signals |
 | `generic` | Any open-source scientific or computational software repository |
-| `bioinformatics` | Genomic repositories and bioinformatics libraries, packages, and command-line tools |
+| `biology` | Biological and life-science software without assuming genomic inputs |
+| `bioinformatics` | Bioinformatics, genomic, sequence-analysis, and related tool repositories |
 | `genomics` | The genomics-focused rule pack, retained for compatibility |
-| `genomics-workflow` | Repositories centered on Nextflow, Snakemake, CWL, or WDL |
+| `genomics-workflow` | Repositories centered on Nextflow, Snakemake, CWL, or WDL workflows |
 
-Use `auto` when unsure. It selects the workflow profile when a supported workflow is present, the bioinformatics profile when genomic or bioinformatics signals are visible, and the generic profile otherwise.
+Automatic selection checks workflow and repository-language signals in this order:
+
+1. `genomics-workflow` for supported workflow repositories.
+2. `bioinformatics` for genomic and sequence-analysis repositories.
+3. `biology` for broader biological software such as neuroscience, proteomics, imaging, or synthetic biology.
+4. `generic` for other scientific and computational repositories.
+
+Use an explicit profile when the repository needs a particular rule pack:
 
 ```powershell
 biorobust profiles
+biorobust scan . --profile biology
+biorobust scan . --profile genomics
 ```
 
-## Ask questions in the terminal
-
-Questions are answered from a fresh local scan. They do not call an online AI service:
-
-```powershell
-biorobust ask project "What does this repository appear to do?"
-biorobust ask project "Is this repository reproducible?"
-biorobust ask project "What inputs, references, and validation evidence should I inspect?"
-biorobust ask project "Are there obvious credential risks?"
-```
-
-Answers include the relevant rule, status, and evidence. Treat `unknown` and `manual_review` as requests for investigation, not as failures.
-
-## Output and interpretation
-
-```powershell
-# Human-readable onboarding document
-biorobust start project --format markdown --output report.md
-
-# Shareable PDF report
-New-Item -ItemType Directory -Force output\pdf | Out-Null
-biorobust start project --format pdf --output output\pdf\report.pdf
-
-# Machine-readable report for CI or scripts
-biorobust scan project --profile auto --format json --output report.json
-
-# Browser-friendly report
-biorobust scan project --profile auto --format html --output report.html
-```
+## Interpreting results
 
 | Status | Meaning |
 |---|---|
@@ -119,35 +118,37 @@ biorobust scan project --profile auto --format html --output report.html
 | `manual_review` | Human or domain-specific validation is required |
 | `not_applicable` | The criterion does not apply |
 
-`pass` does not mean scientifically correct. A valid checksum supports file identity, for example, but does not prove that a reference assembly is biologically appropriate.
+`pass` does not mean scientifically correct. For example, a valid checksum supports file identity but does not prove that a reference is biologically appropriate. The report has a routing decision, not a universal quality score.
 
-Inspect the rule catalog:
+## AI-compatible by design
 
-```powershell
-biorobust rules
-biorobust explain DNA-REF-001
-biorobust explain TEST-001
-```
+BioRobust is useful in an AI-assisted workflow because its reports preserve the source paths, observations, rule IDs, confidence, limitations, and manifest hash behind each conclusion. An AI assistant can summarize or explain that evidence, while the repository owner can inspect the same local files and rerun the scan. BioRobust itself does not make AI authorship claims and does not present generated text as scientific evidence.
 
-## Scope
+## Scope and limitations
 
-The primary target is open-source genomic and bioinformatics software: sequence-analysis tools, variant callers, annotation tools, reference-data packages, Python/R/JavaScript libraries, command-line programs, and workflow repositories. The same generic checks can be used for adjacent scientific software.
+The current project provides broad repository checks and a focused genomic rule pack. It is not a complete domain validator for every biological field. Domain-specific checks should be added only when their evidence model and limitations are clear.
 
-The scanner is deliberately static and local. It does not import or execute target code, fetch external reference data, run workflow engines, prove scientific validity, or provide clinical certification. Replication support means identifying the evidence and missing prerequisites needed for a human-controlled reproduction attempt.
+The scanner is deliberately static and local. It does not import or execute target code, make network requests during a local scan, retrieve external reference data, run workflow engines, prove biological validity, or provide clinical certification. Replication support means identifying the evidence and missing prerequisites needed for a human-controlled reproduction attempt.
 
 ## Development
 
 ```powershell
-python -m unittest discover -s tests
+python -m unittest discover -s tests -v
 ```
 
-The fixtures under `tests/fixtures` are small and synthetic. They exercise evidence behavior, including missing references, placeholder checksums, mutable containers, missing expected outputs, non-substantive tests, and a bioinformatics tool that has no sequence files but is discoverable from its metadata.
+The CI workflow tests supported Python versions, scans the genomics fixture, and performs a PDF smoke test for the broader biology fixture. The fixtures under `tests/fixtures` are small and synthetic so they remain deterministic.
+
+There is no container or hosted service required for v0.4. The supported runtime is a local Python CLI. A future sandboxed execution adapter must be opt-in, resource-limited, and separately documented.
 
 ## Repository guide
 
-- [PRODUCT.md](PRODUCT.md) defines the user problem and v0.3 boundary.
-- [ARCHITECTURE.md](ARCHITECTURE.md) explains the scanner design.
+- [PRODUCT.md](PRODUCT.md) defines the v0.4 product boundary and user workflows.
+- [ARCHITECTURE.md](ARCHITECTURE.md) explains the scanner design and extension seams.
 - [AGENT.md](AGENT.md) contains collaboration and change rules.
+- [CONTRIBUTING.md](CONTRIBUTING.md) explains how to add checks, profiles, tests, and documentation.
 - [ADR-001.md](ADR-001.md) records the local-first, evidence-first decision.
 - [ADR-002.md](ADR-002.md) records the profile, onboarding-document, and terminal-question decision.
+- [ADR-003.md](ADR-003.md) records the v0.4 broadening to biological software.
+- [docs/launch/linkedin-post.md](docs/launch/linkedin-post.md) contains the launch announcement draft.
+- [docs/validation-plan.md](docs/validation-plan.md) defines the cross-domain calibration pilot.
 - [schemas/report.schema.json](schemas/report.schema.json) defines the JSON contract.

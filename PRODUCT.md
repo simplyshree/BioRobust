@@ -1,58 +1,83 @@
-# Product brief: BioRobust
+# Product brief: BioRobust v0.4
+
+## Product promise
+
+BioRobust helps researchers and maintainers understand unfamiliar biological software repositories, identify reproducibility and reuse risks, and produce evidence-backed reports before running or extending the software.
 
 ## Problem
 
-Researchers and maintainers often cannot tell whether a genomic repository is merely available or is reproducible, inspectable, portable, and safe to reuse. Existing checks are fragmented across package registries, workflow systems, security scanners, and repository conventions.
+Open-source biological software is abundant but difficult to evaluate quickly. A repository may have a useful algorithm yet lack clear entry points, tests, dependency constraints, reference-data provenance, citation metadata, or portable execution instructions. These signals are scattered across README files, source trees, workflows, manifests, and CI configuration.
+
+People need a safe first pass that explains what is observable, what is missing, and what should be reviewed by a human or domain expert.
 
 ## Target users
 
-- Bioinformatics researchers selecting a workflow or tool.
-- Maintainers preparing a genomic repository for reuse.
-- Infrastructure teams reviewing research software before running it.
-- Curators building evidence-based catalogs of biological software.
+- Researchers choosing biological software for a new analysis.
+- Maintainers preparing a biological repository for reuse.
+- Bioinformatics and computational biology students learning an unfamiliar codebase.
+- Infrastructure and platform teams screening research software before controlled use.
+- Curators building evidence-based catalogs of open-source biological tools.
+- AI-assisted developers who need a local evidence pack before asking an assistant to explain or extend a repository.
 
-## Goal for v0.3
+## Goals
 
-Give a user a fast, reproducible report about the observable robustness signals in a local biological repository, with structured evidence, explicit uncertainty, a deterministic snapshot identity, a human-readable review document, and narrowly scoped terminal answers grounded in that report.
+- Make a repository understandable from a local folder or Git URL with one starter command.
+- Cover biological software broadly while keeping genomic checks specialized and explicit.
+- Produce reports that preserve evidence, uncertainty, limitations, recommendations, and snapshot identity.
+- Help a human prepare a controlled reproduction or reuse attempt.
+- Remain free, open source, local-first, deterministic, and useful without an online AI service.
+- Provide an extension seam for future domain profiles without changing the core report contract.
 
 ## Non-goals
 
-- Certifying that an algorithm is scientifically correct.
-- Certifying clinical or regulatory compliance.
-- Proving that a workflow is secure or free of vulnerabilities.
-- Judging biological conclusions from source code.
-- Detecting whether code was written by AI.
+- Certifying scientific correctness, clinical suitability, regulatory compliance, or security.
+- Producing a universal biological quality score.
+- Detecting whether code or documentation was written by AI.
 - Executing arbitrary repository code by default.
+- Replacing vulnerability scanners, package registries, workflow engines, or domain experts.
+- Pretending that broad marker detection is complete domain understanding.
 
 ## Main workflow
 
-1. User points BioRobust at a repository.
-2. BioRobust selects an explicit profile or conservatively chooses one with `auto`.
-3. Static checks inspect files, metadata, workflows, and documentation.
-4. Each finding reports a claim, status, severity, confidence, structured evidence, limitations, and recommendation.
-5. User opens JSON in automation, Markdown/HTML for review, or asks a focused question in the terminal.
+1. The user points BioRobust at a local repository or an HTTP(S) Git URL.
+2. BioRobust clones a URL into a local cache when necessary and never executes the target during the default scan.
+3. The profile resolver chooses the least-specialized useful profile: workflow, bioinformatics, biology, or generic.
+4. Static checks inspect bounded repository files, metadata, workflows, documentation, and configuration.
+5. Each check returns a stable rule ID, status, severity, confidence, evidence, limitation, and recommendation.
+6. The user opens a Markdown, PDF, HTML, or JSON report and asks focused questions in the terminal.
+7. The user decides what to inspect, reproduce, or validate next.
 
-## v0.3 acceptance criteria
+## v0.4 scope
 
-- A fresh environment can install the package and run `biorobust scan .`.
-- A scan is deterministic apart from the report timestamp.
-- No repository code is executed during a scan.
-- Every finding has a stable rule ID and evidence or a clear statement that evidence was absent.
-- Missing evidence is represented as `unknown` or `manual_review`, not silently treated as a pass.
-- Placeholder checksum text, generic portability prose, mutable image tags, and `assert True` do not produce scientific `pass` findings.
-- A genomics fixture demonstrates detection of workflow, reference provenance, validation data, and portability signals with real local artifacts.
-- The scanner supports explicit `generic`, `bioinformatics`, `genomics`, and `genomics-workflow` profiles plus conservative `auto` selection.
-- A scan can emit JSON, Markdown, or HTML without changing the evidence model.
-- `biorobust ask PATH QUESTION` answers from local findings and states that it did not execute repository code.
-- A cloned external repository can be scanned using only its local path.
+The broad `biology` profile applies the generic repository checks to biological software without assuming genomic inputs. The specialized `bioinformatics`, `genomics`, and `genomics-workflow` profiles retain the existing genomic evidence rules. Automatic detection recognizes conservative signals for genomics, transcriptomics, proteomics, metabolomics, synthetic biology, neuroscience, imaging, systems biology, ecology, and related areas.
 
-## Next extensions
+The v0.4 launch also includes a public README, contribution guide, Apache-2.0 license, changelog, architecture decision record, launch announcement draft, and CI coverage for broad biology profile selection and PDF output.
 
-- Adapter interfaces for WorkflowHub, Bioconda, OSV, OpenSSF Scorecard, RO-Crate, and GA4GH metadata.
+## Success criteria
+
+- A new user can understand the purpose and limitations from the first README screen.
+- `biorobust start .` works for local biological and scientific repositories without profile knowledge.
+- `biorobust start URL` clones and scans an open Git repository locally.
+- Automatic selection chooses `biology` for a non-genomic biology fixture and `generic` for an unrelated fixture.
+- Existing genomic repositories continue selecting `bioinformatics` or `genomics-workflow` when appropriate.
+- Reports are available in Markdown, PDF, HTML, and JSON without changing the evidence model.
+- The scanner never imports or executes target code in the default path.
+- CI passes on Python 3.10, 3.11, and 3.12.
+- The project has an explicit license and contributor workflow.
+- External pilots on the SBOL specification repository, SeqTrainer, and a broader biological repository produce reviewable local reports.
+
+## Constraints
+
+- Python CLI and local filesystem are the v0.4 runtime boundary.
+- Static checks must be bounded, deterministic apart from report timestamps, and safe on untrusted repositories.
+- Missing evidence must remain `unknown` or `manual_review`, not silently become `pass`.
+- Existing rule IDs and profile names remain compatible.
+- Generated reports are local artifacts and are not committed as source fixtures.
+
+## Future extensions
+
+- Calibrated profiles for protein science, imaging, neuroscience, ecology, and other domains.
+- Adapters for WorkflowHub, Bioconda, OSV, OpenSSF Scorecard, RO-Crate, and GA4GH metadata.
 - Optional sandboxed dry runs for selected workflow engines.
-- Versioned rule packs for RNA-seq, metagenomics, neuroscience, machine-learning biology, and other domains.
-- Domain adapters and opt-in sandboxed execution only after the static evidence model is calibrated.
-- Maintainer-facing badges only after the underlying evidence model has been validated with real repositories.
-- Pilot calibration over 15–30 pinned external repositories, as described in [docs/validation-plan.md](docs/validation-plan.md).
-
-
+- Maintainer-facing badges only after real-repository calibration.
+- A tested third-party profile plugin contract.
