@@ -19,17 +19,60 @@ It does not certify scientific correctness, clinical suitability, security, or A
 
 ## Quick start
 
+You do not need to clone BioRobust to scan a repository, and a virtual environment is not required for a first try. The simplest path is to install the published release and run one command.
+
+### Easiest path: install the published release
+
+Download the file named `biorobust-0.4.1-py3-none-any.whl` from the [v0.4.1 release](https://github.com/simplyshree/BioRobust/releases/tag/v0.4.1). You normally do not need the `.tar.gz` source archive.
+
+In PowerShell, replace the path with the location of your downloaded wheel:
+
+```powershell
+python -m pip install "C:\Users\YourName\Downloads\biorobust-0.4.1-py3-none-any.whl"
+biorobust --version
+```
+
+Then scan any public Git repository directly. BioRobust clones the target repository locally for you:
+
+```powershell
+biorobust start https://github.com/scikit-bio/scikit-bio.git
+```
+
+If PowerShell says that `biorobust` is not recognized, use the equivalent module form:
+
+```powershell
+python -m biorobust start https://github.com/scikit-bio/scikit-bio.git
+```
+
+### Latest code from GitHub
+
+The published `v0.4.1` release is a stable snapshot. The current `main` branch contains newer changes, including the removal of the experimental `ask` command. You can install that code without cloning BioRobust:
+
+```powershell
+python -m pip install "biorobust @ git+https://github.com/simplyshree/BioRobust.git@main"
+```
+
+### Do I need a virtual environment?
+
+No. It is optional for ordinary use. It is recommended when you already use Python for other projects or when you are developing BioRobust, because it keeps BioRobust's dependencies separate from the rest of your computer. If you want that safer development setup:
+
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -e ".[test]"
+python -m pip install "biorobust @ git+https://github.com/simplyshree/BioRobust.git@main"
 
-# Run inside an already-cloned repository
+# Scan a public repository
+biorobust start https://github.com/scikit-bio/scikit-bio.git
+```
+
+The normal workflow is one command. `start` uses the `auto` profile, creates a Markdown onboarding report by default, and does not execute the target project.
+
+To scan a repository that you already cloned:
+
+```powershell
 cd path\to\repository
 biorobust start .
 ```
-
-The normal workflow is one command from the repository folder. `start` uses the `auto` profile, creates a Markdown onboarding report by default, and does not execute the target project.
 
 To start directly from a GitHub or other HTTP(S) Git URL:
 
@@ -38,6 +81,16 @@ biorobust start https://github.com/OWNER/PROJECT.git
 ```
 
 BioRobust clones the repository into `.biorobust/repos/` and reuses that local copy on later runs.
+
+### Which option should I choose?
+
+| Your goal | Use this |
+|---|---|
+| Try BioRobust on repositories | Download the `.whl` release and install it. |
+| Use the newest code without editing it | Install from the `main` branch. |
+| Change BioRobust or contribute code | Clone BioRobust and install it in editable mode. |
+
+The scanning workflow is the same in all three modes. The difference is which BioRobust code you are running: a release is fixed, while `main` or an editable clone receives newer changes.
 
 ## Reports
 
@@ -143,32 +196,17 @@ The current project provides broad repository checks and a focused genomic rule 
 
 The scanner is deliberately static and local. It does not import or execute target code, make network requests during a local scan, retrieve external reference data, run workflow engines, prove biological validity, or provide clinical certification. Replication support means identifying the evidence and missing prerequisites needed for a human-controlled reproduction attempt.
 
-## Install as software
+## Local development
 
-For the released source version:
-
-```powershell
-python -m pip install "biorobust @ git+https://github.com/simplyshree/BioRobust.git@v0.4.1"
-biorobust --version
-```
-
-To use the latest development branch instead:
+Clone BioRobust only when you want to modify it, run its tests, or contribute changes:
 
 ```powershell
-python -m pip install "biorobust @ git+https://github.com/simplyshree/BioRobust.git@main"
-```
-
-For local development and contributions:
-
-```powershell
+git clone https://github.com/simplyshree/BioRobust.git
+cd BioRobust
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[test]"
 python -m pytest -q
-```
-
-After a numbered PyPI release is published, the normal user installation will be:
-
-```powershell
-python -m pip install biorobust
 ```
 
 See [RELEASING.md](RELEASING.md) for the versioning and GitHub Release process.
