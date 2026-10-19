@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- No unreleased changes.
+- Removed the misleading keyword-based `ask` command from the current CLI and public workflow pending a more reliable grounded briefing interface.
 
 ## 0.4.1 - Reporting hardening and pilot release
 

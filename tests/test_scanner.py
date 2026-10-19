@@ -118,7 +118,7 @@ class ScannerTests(unittest.TestCase):
         explicit = scan(biology, "generic")
         self.assertEqual(explicit.profile, "generic")
 
-    def test_markdown_report_and_grounded_question(self) -> None:
+    def test_markdown_report_and_start_workflow(self) -> None:
         markdown_stdout = io.StringIO()
         with contextlib.redirect_stdout(markdown_stdout):
             self.assertEqual(main(["scan", str(FIXTURE), "--format", "markdown"]), 0)
@@ -129,11 +129,13 @@ class ScannerTests(unittest.TestCase):
             self.assertEqual(main(["start", str(FIXTURE)]), 0)
         self.assertIn("# BioRobust evidence report", start_stdout.getvalue())
 
-        answer_stdout = io.StringIO()
-        with contextlib.redirect_stdout(answer_stdout):
-            self.assertEqual(main(["ask", str(FIXTURE), "Is this repository reproducible?"]), 0)
-        self.assertIn("REPRO-001", answer_stdout.getvalue())
-        self.assertIn("static, evidence-grounded", answer_stdout.getvalue())
+    def test_ask_command_is_removed(self) -> None:
+        error_stderr = io.StringIO()
+        with contextlib.redirect_stderr(error_stderr):
+            with self.assertRaises(SystemExit) as raised:
+                main(["ask", str(FIXTURE), "What does this do?"])
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn("invalid choice: 'ask'", error_stderr.getvalue())
 
     def test_cli_pdf_output(self) -> None:
         with tempfile.TemporaryDirectory(dir=ROOT, ignore_cleanup_errors=True) as directory:

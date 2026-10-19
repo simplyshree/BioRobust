@@ -14,7 +14,6 @@ It does not certify scientific correctness, clinical suitability, security, or A
 - Helps maintainers identify missing documentation, tests, dependency constraints, licenses, citation metadata, and portability evidence.
 - Helps reviewers prepare a controlled reproduction or reuse attempt by showing what evidence exists and what is missing.
 - Produces Markdown, PDF, HTML, and JSON reports from the same evidence model.
-- Answers focused questions in the terminal from a fresh local scan.
 - Keeps stable rule IDs, evidence locations, confidence, limitations, and a deterministic manifest hash in every report.
 - Supports AI-assisted repository exploration without replacing the underlying local evidence trail.
 
@@ -40,7 +39,7 @@ biorobust start https://github.com/OWNER/PROJECT.git
 
 BioRobust clones the repository into `.biorobust/repos/` and reuses that local copy on later runs.
 
-## Reports and terminal questions
+## Reports
 
 ```powershell
 # Markdown onboarding report
@@ -62,10 +61,6 @@ biorobust scan . --format json --output report.json
 # Browser-friendly report
 biorobust scan . --format html --output report.html
 
-# Evidence-grounded terminal questions
-biorobust ask . "What does this repository appear to do?"
-biorobust ask . "What would I need to reproduce its main workflow?"
-biorobust ask . "What evidence is missing before I reuse this tool?"
 ```
 
 Generated PDFs and other local report artifacts are ignored by Git. The available formats are `markdown` for onboarding, `pdf` for sharing or archiving, `html` for browser viewing, and `json` for automation.
@@ -98,9 +93,6 @@ static evidence scan
         |
         v
 Markdown, PDF, HTML, or JSON report
-        |
-        v
-grounded terminal questions
 ```
 
 ## Profiles
@@ -211,7 +203,7 @@ BioRobust uses semantic-style versions such as `0.4.1`. The version must match i
 - [AGENT.md](AGENT.md) contains collaboration and change rules.
 - [CONTRIBUTING.md](CONTRIBUTING.md) explains how to add checks, profiles, tests, and documentation.
 - [ADR-001.md](ADR-001.md) records the local-first, evidence-first decision.
-- [ADR-002.md](ADR-002.md) records the profile, onboarding-document, and terminal-question decision.
+- [ADR-002.md](ADR-002.md) records the historical profile and report-document decision.
 - [ADR-003.md](ADR-003.md) records the v0.4 broadening to biological software.
 - [docs/launch/linkedin-post.md](docs/launch/linkedin-post.md) contains the launch announcement draft.
 - [docs/launch/pilot-invitation.md](docs/launch/pilot-invitation.md) contains the first user-testing message.

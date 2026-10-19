@@ -44,7 +44,7 @@ People need a safe first pass that explains what is observable, what is missing,
 3. The profile resolver chooses the least-specialized useful profile: workflow, bioinformatics, biology, or generic.
 4. Static checks inspect bounded repository files, metadata, workflows, documentation, and configuration.
 5. Each check returns a stable rule ID, status, severity, confidence, evidence, limitation, and recommendation.
-6. The user opens a Markdown, PDF, HTML, or JSON report and asks focused questions in the terminal.
+6. The user opens a Markdown, PDF, HTML, or JSON report.
 7. The user decides what to inspect, reproduce, or validate next.
 
 ## v0.4 scope

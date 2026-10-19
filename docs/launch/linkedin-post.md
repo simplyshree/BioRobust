@@ -11,7 +11,6 @@ BioRobust gives researchers and maintainers a practical first pass:
 - point it at a local repository or Git URL;
 - let it choose an appropriate profile for biological, genomic, or general scientific software;
 - produce a Markdown, PDF, HTML, or JSON evidence report;
-- ask focused questions in the terminal after cloning;
 - inspect the evidence, limitations, and missing prerequisites behind each result.
 
 The default workflow is local and static. It does not execute repository code, send repository contents to an online AI service, or hide uncertainty behind a single quality score. It records stable rule IDs, evidence locations, confidence, limitations, recommendations, and a deterministic manifest hash.
@@ -28,7 +27,7 @@ Project: https://github.com/simplyshree/BioRobust
 
 I am building BioRobust, a free and open-source local tool for understanding biological and scientific software repositories before reuse.
 
-It scans a local folder or Git URL without executing the target code, produces Markdown/PDF/HTML/JSON evidence reports, and answers focused terminal questions from the observed repository evidence. It is designed for researchers and maintainers working across genomics, bioinformatics, synthetic biology, neuroscience, imaging, proteomics, and related fields.
+It scans a local folder or Git URL without executing the target code and produces Markdown/PDF/HTML/JSON evidence reports. It is designed for researchers and maintainers working across genomics, bioinformatics, synthetic biology, neuroscience, imaging, proteomics, and related fields.
 
 The project deliberately reports evidence and uncertainty instead of pretending to certify scientific correctness or reduce repository quality to one score.
 

@@ -14,7 +14,7 @@ The first external pilots are used to check whether a new user can:
 3. understand the repository’s purpose, entry points, tests, dependencies,
    data, and workflow signals from the report;
 4. identify missing evidence before attempting a controlled replication; and
-5. ask focused questions with `biorobust ask` in the terminal.
+5. review the evidence, limitations, and recommendations in the generated report.
 
 ## Interpretation
 

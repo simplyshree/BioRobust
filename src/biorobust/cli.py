@@ -39,10 +39,6 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("profiles", help="List available domain profiles")
     explain_parser = subparsers.add_parser("explain", help="Explain one rule")
     explain_parser.add_argument("rule_id", help="Rule ID, for example DNA-REF-001")
-    ask_parser = subparsers.add_parser("ask", help="Answer a question from a local evidence report")
-    ask_parser.add_argument("path", help="Repository directory that has already been cloned or downloaded")
-    ask_parser.add_argument("question", nargs="+", help="Question to answer from detected evidence")
-    ask_parser.add_argument("--profile", choices=["auto", *sorted(PROFILES)], default="auto", help="Check profile")
     return parser
 
 
@@ -116,36 +112,6 @@ def _print_explanation(rule_id: str) -> int:
     return 0
 
 
-def _answer_question(path: str, question: str, profile: str) -> int:
-    report = scan(path, profile)
-    lowered = question.lower()
-    keyword_groups = {
-        "reproducibility": {"REPRO-001", "DNA-PORT-001", "CI-001"},
-        "portable": {"DNA-PORT-001", "REPRO-001"},
-        "test": {"TEST-001", "DNA-VAL-001"},
-        "valid": {"DNA-VAL-001"},
-        "reference": {"DNA-REF-001"},
-        "license": {"META-001"},
-        "document": {"DOC-001", "META-002"},
-        "security": {"SEC-001"},
-        "secret": {"SEC-001"},
-    }
-    selected_ids: set[str] = set()
-    for keyword, rule_ids in keyword_groups.items():
-        if keyword in lowered:
-            selected_ids.update(rule_ids)
-    findings = [finding for finding in report.findings if not selected_ids or finding.rule_id in selected_ids]
-    print(f"BioRobust answer for: {question}")
-    print(f"Profile: {report.profile}; decision: {report.decision}")
-    for finding in findings:
-        print(f"- {finding.rule_id} [{finding.status}] {finding.message}")
-        for evidence in finding.evidence[:3]:
-            location = evidence.path or "(absence)"
-            print(f"  evidence: {location} — {evidence.observation}")
-    print("This is a static, evidence-grounded answer; it does not execute the repository or prove biological correctness.")
-    return 0
-
-
 def _write_report(report, report_format: str, output: Path | None, options: RenderOptions) -> None:
     if report_format == "pdf":
         if output:
@@ -181,12 +147,6 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "explain":
         return _print_explanation(args.rule_id)
-    if args.command == "ask":
-        try:
-            return _answer_question(args.path, " ".join(args.question), args.profile)
-        except (OSError, ValueError, json.JSONDecodeError) as exc:
-            print(f"biorobust: {exc}", file=sys.stderr)
-            return 2
     if args.command not in {"scan", "start"}:
         return 2
     try:

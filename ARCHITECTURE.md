@@ -27,7 +27,7 @@ local path or HTTP(S) Git URL
     JSON   Markdown   HTML     PDF
               |
               v
-      deterministic terminal questions
+        reviewable reports
 ```
 
 The input boundary is a repository directory or a public HTTP(S) Git URL. The output boundary is a versioned report with a deterministic manifest hash. The scanner does not modify or execute the target repository.
@@ -44,7 +44,7 @@ The input boundary is a repository directory or a public HTTP(S) Git URL. The ou
 - `report_options.py` defines immutable, presentation-only themes and evidence-detail levels.
 - `pdf_styles.py` centralizes readable typography, status labels, and theme palettes.
 - `pdf_layout.py` builds the portrait A4 PDF story without changing the underlying report.
-- `cli.py` exposes `start`, `scan`, `ask`, `rules`, `profiles`, and `explain` commands.
+- `cli.py` exposes `start`, `scan`, `rules`, `profiles`, and `explain` commands.
 - `schemas/report.schema.json` defines the machine-readable JSON contract.
 
 ## Profile model
@@ -68,7 +68,7 @@ Profiles are named tuples of checks with a description and a conservative detect
 3. The selected checks return `Finding` objects with evidence or explicit absence observations.
 4. `ScanReport` derives status counts and a routing decision without calculating a global quality score.
 5. Writers serialize the report to JSON, Markdown, HTML, or PDF. Render options affect only human-readable output; JSON remains complete.
-6. `ask` performs a fresh local scan and selects relevant existing findings by question terms. It does not call an LLM or execute target code.
+6. The user reviews the report and can use the stable rule IDs and evidence paths to investigate specific findings.
 
 ## Interfaces and compatibility
 
