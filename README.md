@@ -1,6 +1,12 @@
 # BioRobust
 
-BioRobust is a free, open-source, local-first tool for understanding unfamiliar biological and scientific software repositories before you run, reuse, or extend them.
+[![CI](https://github.com/simplyshree/BioRobust/actions/workflows/ci.yml/badge.svg)](https://github.com/simplyshree/BioRobust/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/simplyshree/BioRobust?label=latest%20release)](https://github.com/simplyshree/BioRobust/releases/latest)
+[![License](https://img.shields.io/github/license/simplyshree/BioRobust)](https://github.com/simplyshree/BioRobust/blob/main/LICENSE)
+
+> Understand an open-source biological software repository before you run, reuse, or extend it.
+
+BioRobust is a free, open-source, local-first tool for turning an unfamiliar biological or scientific repository into a reviewable evidence report.
 
 It creates evidence-backed reports about documentation, tests, dependencies, workflows, reference data, validation signals, security patterns, and portability. It makes uncertainty visible instead of hiding everything behind a single score.
 
@@ -17,33 +23,41 @@ It does not certify scientific correctness, clinical suitability, security, or A
 - Keeps stable rule IDs, evidence locations, confidence, limitations, and a deterministic manifest hash in every report.
 - Supports AI-assisted repository exploration without replacing the underlying local evidence trail.
 
-## Quick start
+## Start here
 
-For the fewest steps, install the current GitHub version and run it on a public repository. You do not need to download a wheel, clone BioRobust, or create a virtual environment for a first try. Python and Git should already be installed.
+This is the only setup most people need. You need Python 3.10 or newer and Git. A virtual environment is optional for this first run.
 
-```powershell
-python -m pip install "biorobust @ git+https://github.com/simplyshree/BioRobust.git@main"
-biorobust start https://github.com/scikit-bio/scikit-bio.git
-```
+### 1. Install BioRobust
 
-No virtual environment is required for this first try. If `biorobust` is not recognized after installation, use this equivalent scan command:
+Use the direct wheel link below. You can also [open the release page](https://github.com/simplyshree/BioRobust/releases/tag/v0.4.2) and download the same `.whl` file manually.
 
 ```powershell
-python -m biorobust start https://github.com/scikit-bio/scikit-bio.git
+python -m pip install "https://github.com/simplyshree/BioRobust/releases/download/v0.4.2/biorobust-0.4.2-py3-none-any.whl"
 ```
 
-The normal workflow is one command. `start` uses the `auto` profile, creates a Markdown onboarding report by default, and does not execute the target project.
+### 2. Scan a repository
 
-To scan a repository that you already cloned:
+Try it immediately on [scikit-bio](https://github.com/scikit-bio/scikit-bio):
 
 ```powershell
-cd path\to\repository
-biorobust start .
+biorobust start https://github.com/scikit-bio/scikit-bio.git --output scikit-bio-biorobust.md
 ```
 
-BioRobust clones the repository into `.biorobust/repos/` and reuses that local copy on later runs.
+Replace the URL with any public Git repository. BioRobust clones the target repository into `.biorobust/repos/`, scans it without executing its code, and writes the report to the file you named.
 
-The published [v0.4.1 release](https://github.com/simplyshree/BioRobust/releases/tag/v0.4.1) is available when you specifically need a fixed snapshot. The beginner path above uses the current `main` branch so it includes the latest fixes.
+Open the report in Windows with:
+
+```powershell
+ii .\scikit-bio-biorobust.md
+```
+
+If Windows cannot find the `biorobust` command, use this equivalent form:
+
+```powershell
+python -m biorobust start https://github.com/scikit-bio/scikit-bio.git --output scikit-bio-biorobust.md
+```
+
+For a repository already on your computer, run `biorobust start . --output biorobust-report.md` from that repository's folder. You do not need to clone BioRobust itself for normal use.
 
 ## Reports
 
@@ -185,7 +199,7 @@ There is no container or hosted service required for v0.4. The supported runtime
 
 ## Release
 
-BioRobust uses semantic-style versions such as `0.4.1`. The version must match in `pyproject.toml` and `src/biorobust/__init__.py`. A release is made from a Git tag such as `v0.4.1`; GitHub Actions builds the source archive and wheel and attaches them to a GitHub Release. PyPI publication is intentionally a separate maintainer decision.
+BioRobust uses semantic-style versions such as `0.4.2`. The version must match in `pyproject.toml` and `src/biorobust/__init__.py`. A release is made from a Git tag such as `v0.4.2`; GitHub Actions builds the source archive and wheel and attaches them to a GitHub Release. PyPI publication is intentionally a separate maintainer decision.
 
 ## Repository guide
 

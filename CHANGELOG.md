@@ -1,8 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.4.2 - Public usability release
 
-- Removed the misleading keyword-based `ask` command from the current CLI and public workflow pending a more reliable grounded briefing interface.
+- Removed the misleading keyword-based `ask` command from the CLI and public workflow.
+- Simplified first-use installation and repository scanning for Windows and PowerShell users.
+- Added direct release-install guidance and a copy-paste first scan workflow.
+- Clarified the distinction between the stable release, the current branch, and local development.
 
 ## 0.4.1 - Reporting hardening and pilot release
 
