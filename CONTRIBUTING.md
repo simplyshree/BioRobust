@@ -8,7 +8,7 @@ Thank you for helping make open-source biological software easier to understand 
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[test]"
-python -m unittest discover -s tests -v
+python -m pytest -q
 ```
 
 BioRobust is a local Python CLI. No hosted service or container is required for development.

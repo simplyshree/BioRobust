@@ -12,7 +12,7 @@ BioRobust is distributed as a Python package and as source code on GitHub. The r
 
    ```powershell
    python -m pip install -e ".[test,release]"
-   python -m unittest discover -s tests -v
+   python -m pytest -q
    Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue
    python -m build
    ```
