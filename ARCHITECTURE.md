@@ -40,7 +40,10 @@ The input boundary is a repository directory or a public HTTP(S) Git URL. The ou
 - `scanner.py` resolves the requested profile, runs checks, and creates a `ScanReport` with limitations and notes.
 - `models.py` defines strict report objects, evidence types, statuses, decisions, and serialization.
 - `rules.py` defines the versioned rule catalog used by the CLI and reports.
-- `reporting.py` renders Markdown, HTML, JSON, and paginated PDF documents from the same report object.
+- `reporting.py` is the stable writer API for JSON, Markdown, HTML, and PDF reports.
+- `report_options.py` defines immutable, presentation-only themes and evidence-detail levels.
+- `pdf_styles.py` centralizes readable typography, status labels, and theme palettes.
+- `pdf_layout.py` builds the portrait A4 PDF story without changing the underlying report.
 - `cli.py` exposes `start`, `scan`, `ask`, `rules`, `profiles`, and `explain` commands.
 - `schemas/report.schema.json` defines the machine-readable JSON contract.
 
@@ -64,12 +67,13 @@ Profiles are named tuples of checks with a description and a conservative detect
 2. `Repository` exposes bounded, deterministic observations to checks.
 3. The selected checks return `Finding` objects with evidence or explicit absence observations.
 4. `ScanReport` derives status counts and a routing decision without calculating a global quality score.
-5. Writers serialize the report to JSON, Markdown, HTML, or PDF.
+5. Writers serialize the report to JSON, Markdown, HTML, or PDF. Render options affect only human-readable output; JSON remains complete.
 6. `ask` performs a fresh local scan and selects relevant existing findings by question terms. It does not call an LLM or execute target code.
 
 ## Interfaces and compatibility
 
 - The JSON report schema remains the stable automation contract.
+- The `RenderOptions` interface is immutable and presentation-only: `scientific`, `minimal`, or `high-contrast` themes and `minimal`, `standard`, or `verbose` evidence detail.
 - Existing profile names and `DNA-*` rule IDs remain valid.
 - `scan` and the CLI now default to `auto`; callers can request `generic`, `biology`, `bioinformatics`, `genomics`, or `genomics-workflow` explicitly.
 - New profiles should reuse the report model and add fixtures before adding broad heuristics.
@@ -77,7 +81,7 @@ Profiles are named tuples of checks with a description and a conservative detect
 
 ## Deployment and operations
 
-There is no backend, frontend, database, hosted service, or container requirement in v0.4. Installation is a local Python package. CI runs the unit suite and a small scan smoke test on supported Python versions.
+There is no backend, frontend, database, hosted service, or container requirement in v0.4. Installation is a local Python package. CI runs the test suite and JSON/PDF scan smoke tests on Python 3.11–3.14.
 
 The default mode reads local files only. URL cloning is the one explicit network-capable workflow and is visible to the user. External metadata adapters, if added later, must make network behavior explicit and cache or record the evidence they use.
 
@@ -91,7 +95,7 @@ The default mode reads local files only. URL cloning is the one explicit network
 
 ## Testing strategy
 
-Unit tests cover evidence semantics, schema validation, deterministic manifests, CLI outputs, ignored directories, credential false positives, genomic positive/negative/ambiguous fixtures, broad biology profile detection, generic fallback, and PDF generation. Real-repository pilots are run manually and are not part of CI because external repositories change over time.
+Unit tests cover evidence semantics, schema validation, deterministic manifests, CLI outputs, ignored directories, credential false positives, genomic positive/negative/ambiguous fixtures, broad biology profile detection, generic fallback, immutable rendering options, HTML table semantics, PDF text/status readability, PDF non-mutation, and all report formats. Real-repository pilots are run manually and are not part of CI because external repositories change over time.
 
 ## Risks and open questions
 

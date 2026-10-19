@@ -62,7 +62,7 @@ The v0.4 launch also includes a public README, contribution guide, Apache-2.0 li
 - Existing genomic repositories continue selecting `bioinformatics` or `genomics-workflow` when appropriate.
 - Reports are available in Markdown, PDF, HTML, and JSON without changing the evidence model.
 - The scanner never imports or executes target code in the default path.
-- CI passes on Python 3.10, 3.11, and 3.12.
+- CI passes on Python 3.11, 3.12, 3.13, and 3.14.
 - The project has an explicit license and contributor workflow.
 - External pilots on the SBOL specification repository, SeqTrainer, and a broader biological repository produce reviewable local reports.
 

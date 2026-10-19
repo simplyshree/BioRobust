@@ -9,7 +9,7 @@
     "schema_version": {"const": "0.2"},
     "tool": {"type": "object", "additionalProperties": false, "required": ["name", "version"], "properties": {"name": {"const": "biorobust"}, "version": {"type": "string", "minLength": 1}}},
     "target": {"type": "string", "minLength": 1},
-    "profile": {"type": "string", "enum": ["generic", "bioinformatics", "genomics", "genomics-workflow"]},
+    "profile": {"type": "string", "enum": ["generic", "biology", "bioinformatics", "genomics", "genomics-workflow"]},
     "generated_at": {"type": "string", "format": "date-time"},
     "rule_pack_version": {"type": "string", "minLength": 1},
     "manifest_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},

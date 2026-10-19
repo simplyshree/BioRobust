@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 
 from . import __version__
 from .reporting import write_html, write_json, write_markdown, write_pdf
+from .report_options import DETAIL_LEVELS, THEME_NAMES, RenderOptions
 from .rules import RULE_BY_ID, RULE_PACK_VERSION, RULES
 from .scanner import PROFILES, scan
 
@@ -25,12 +26,14 @@ def build_parser() -> argparse.ArgumentParser:
     scan_parser.add_argument("--profile", choices=["auto", *sorted(PROFILES)], default="auto", help="Check profile")
     scan_parser.add_argument("--format", choices=("json", "html", "markdown", "pdf"), default="json", help="Report format")
     scan_parser.add_argument("--output", type=Path, help="Write the report to a file instead of stdout")
+    _add_render_options(scan_parser)
 
     start_parser = subparsers.add_parser("start", help="Create a first-pass report from a local repository or Git URL")
     start_parser.add_argument("path", nargs="?", default=".", help="Repository directory or Git URL")
     start_parser.add_argument("--profile", choices=["auto", *sorted(PROFILES)], default="auto", help="Check profile")
     start_parser.add_argument("--format", choices=("json", "html", "markdown", "pdf"), default="markdown", help="Report format")
     start_parser.add_argument("--output", type=Path, help="Write the report to a file instead of stdout")
+    _add_render_options(start_parser)
 
     subparsers.add_parser("rules", help="List the versioned rule pack")
     subparsers.add_parser("profiles", help="List available domain profiles")
@@ -41,6 +44,21 @@ def build_parser() -> argparse.ArgumentParser:
     ask_parser.add_argument("question", nargs="+", help="Question to answer from detected evidence")
     ask_parser.add_argument("--profile", choices=["auto", *sorted(PROFILES)], default="auto", help="Check profile")
     return parser
+
+
+def _add_render_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--theme",
+        choices=THEME_NAMES,
+        default="scientific",
+        help="Human-readable report theme (PDF, HTML, and Markdown)",
+    )
+    parser.add_argument(
+        "--detail",
+        choices=DETAIL_LEVELS,
+        default="standard",
+        help="Evidence detail: minimal (2), standard (5), or verbose (all)",
+    )
 
 
 def _start_target(source: str) -> str:
@@ -128,21 +146,29 @@ def _answer_question(path: str, question: str, profile: str) -> int:
     return 0
 
 
-def _write_report(report, report_format: str, output: Path | None) -> None:
+def _write_report(report, report_format: str, output: Path | None, options: RenderOptions) -> None:
     if report_format == "pdf":
         if output:
             with output.open("wb") as stream:
-                write_pdf(report, stream)
+                write_pdf(report, stream, options)
         else:
-            write_pdf(report, sys.stdout.buffer)
+            write_pdf(report, sys.stdout.buffer, options)
         return
 
-    writer = {"json": write_json, "html": write_html, "markdown": write_markdown}[report_format]
+    if report_format == "json":
+        if output:
+            with output.open("w", encoding="utf-8") as stream:
+                write_json(report, stream)
+        else:
+            write_json(report, sys.stdout)
+        return
+
+    writer = {"html": write_html, "markdown": write_markdown}[report_format]
     if output:
         with output.open("w", encoding="utf-8") as stream:
-            writer(report, stream)
+            writer(report, stream, options)
     else:
-        writer(report, sys.stdout)
+        writer(report, sys.stdout, options)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -168,7 +194,7 @@ def main(argv: list[str] | None = None) -> int:
         report = scan(target, args.profile)
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
-        _write_report(report, args.format, args.output)
+        _write_report(report, args.format, args.output, RenderOptions(theme=args.theme, detail=args.detail))
         return 0
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         print(f"biorobust: {exc}", file=sys.stderr)

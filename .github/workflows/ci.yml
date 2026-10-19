@@ -4,20 +4,33 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: biorobust-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e ".[test]"
-      - run: python -m unittest discover -s tests -v
+      - run: python -m pytest -q
       - run: python -m biorobust scan tests/fixtures/genomics_repo --profile genomics --format json --output /tmp/biorobust-report.json
-      - run: python -m biorobust scan tests/fixtures/biology_tool_repo --format pdf --output /tmp/biorobust-biology-report.pdf
-
+      - run: python -m biorobust scan tests/fixtures/biology_tool_repo --format pdf --theme scientific --detail standard --output /tmp/biorobust-biology-report.pdf
+      - uses: actions/upload-artifact@v4
+        with:
+          name: biorobust-pdf-smoke-${{ matrix.python-version }}
+          path: /tmp/biorobust-biology-report.pdf
+          if-no-files-found: error

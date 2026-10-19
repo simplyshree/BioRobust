@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added the explicit `biology` profile to the report schema while keeping existing profile names compatible.
+- Added immutable `--theme` and `--detail` presentation options for `scan` and `start`; JSON remains complete and unchanged by these options.
+- Reworked PDF output into readable portrait A4 layouts with centralized styles, text-visible status labels, and scientific, minimal, and high-contrast themes.
+- Added accessible HTML table captions and column scopes, reporting regression tests, pypdf validation, and CI coverage on Python 3.11–3.14 with PDF artifacts.
+- Added a public pilot invitation for testing BioRobust on different biological and scientific repositories.
 - Improved precision for bioinformatics libraries by ignoring ordinary changelog/source identifiers as genome references.
 - Restricted portability detection to actual container/image declarations and Dockerfile `FROM` lines.
 - Marked workflow, reference, and known-answer checks as not applicable when a repository does not contain those artifact types.

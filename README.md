@@ -48,7 +48,13 @@ biorobust start . --format markdown --output report.md
 
 # Shareable PDF report
 New-Item -ItemType Directory -Force output\pdf | Out-Null
-biorobust start . --format pdf --output output\pdf\report.pdf
+biorobust start . --format pdf --theme scientific --detail standard --output output\pdf\report.pdf
+
+# A compact report for a quick review
+biorobust start . --format pdf --theme minimal --detail minimal --output output\pdf\quick-review.pdf
+
+# A high-contrast report with every evidence observation
+biorobust start . --format pdf --theme high-contrast --detail verbose --output output\pdf\full-review.pdf
 
 # Machine-readable report for CI or scripts
 biorobust scan . --format json --output report.json
@@ -63,6 +69,21 @@ biorobust ask . "What evidence is missing before I reuse this tool?"
 ```
 
 Generated PDFs and other local report artifacts are ignored by Git. The available formats are `markdown` for onboarding, `pdf` for sharing or archiving, `html` for browser viewing, and `json` for automation.
+
+### Presentation options
+
+The scanner always builds the same evidence-bearing report. These options only control human-readable presentation:
+
+| Option | Values | Use |
+|---|---|---|
+| `--theme` | `scientific`, `minimal`, `high-contrast` | Choose the visual palette for PDF and HTML; Markdown records the choice. |
+| `--detail` | `minimal`, `standard`, `verbose` | Show 2, 5, or all evidence observations per finding in human-readable reports. |
+
+JSON always contains the complete evidence list, regardless of theme or detail. Both `scan` and `start` accept these options. For example:
+
+```powershell
+biorobust scan . --format html --theme high-contrast --detail verbose --output report.html
+```
 
 ## How the workflow works
 
@@ -143,6 +164,7 @@ For local development and contributions:
 
 ```powershell
 python -m pip install -e ".[test]"
+python -m pytest -q
 ```
 
 After a numbered PyPI release is published, the normal user installation will be:
@@ -165,10 +187,10 @@ For AI-assisted changes, read [PRODUCT.md](PRODUCT.md), [ARCHITECTURE.md](ARCHIT
 ## Development
 
 ```powershell
-python -m unittest discover -s tests -v
+python -m pytest -q
 ```
 
-The CI workflow tests supported Python versions, scans the genomics fixture, and performs a PDF smoke test for the broader biology fixture. The fixtures under `tests/fixtures` are small and synthetic so they remain deterministic.
+The CI workflow tests Python 3.11–3.14, validates report schemas, checks all report formats, scans the genomics fixture, and performs a PDF smoke test for the broader biology fixture. The fixtures under `tests/fixtures` are small and synthetic so they remain deterministic.
 
 There is no container or hosted service required for v0.4. The supported runtime is a local Python CLI. A future sandboxed execution adapter must be opt-in, resource-limited, and separately documented.
 
@@ -186,5 +208,6 @@ BioRobust uses semantic-style versions such as `0.4.0`. The version must match i
 - [ADR-002.md](ADR-002.md) records the profile, onboarding-document, and terminal-question decision.
 - [ADR-003.md](ADR-003.md) records the v0.4 broadening to biological software.
 - [docs/launch/linkedin-post.md](docs/launch/linkedin-post.md) contains the launch announcement draft.
+- [docs/launch/pilot-invitation.md](docs/launch/pilot-invitation.md) contains the first user-testing message.
 - [docs/validation-plan.md](docs/validation-plan.md) defines the cross-domain calibration pilot.
 - [schemas/report.schema.json](schemas/report.schema.json) defines the JSON contract.

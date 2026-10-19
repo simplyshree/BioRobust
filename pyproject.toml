@@ -29,13 +29,13 @@ Issues = "https://github.com/simplyshree/BioRobust/issues"
 Documentation = "https://github.com/simplyshree/BioRobust#readme"
 
 [project.optional-dependencies]
-test = ["jsonschema>=4", "pytest>=7"]
+test = ["jsonschema>=4", "pytest>=7", "pypdf>=5"]
 release = ["build>=1", "twine>=5"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests/test_reporting.py", "tests/test_scanner.py", "tests/test_schema.py"]
 
 
