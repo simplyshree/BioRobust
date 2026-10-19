@@ -25,14 +25,14 @@ BioRobust is distributed as a Python package and as source code on GitHub. The r
 Commit the versioned changes, then create and push an annotated tag:
 
 ```powershell
-git add README.md CHANGELOG.md pyproject.toml src/biorobust/__init__.py
-git commit -m "Release BioRobust 0.4.0"
-git tag -a v0.4.0 -m "BioRobust 0.4.0"
+git add README.md CHANGELOG.md pyproject.toml src/biorobust/__init__.py src/biorobust/rules.py
+git commit -m "Release BioRobust 0.4.1"
+git tag -a v0.4.1 -m "BioRobust 0.4.1"
 git push origin main
-git push origin v0.4.0
+git push origin v0.4.1
 ```
 
-Pushing the tag starts `.github/workflows/release.yml`. The workflow rebuilds the package and creates a GitHub Release with the source archive and wheel. Replace `0.4.0` with the next release version when repeating the process. Do not tag until the tests, changelog, and package versions agree.
+Pushing the tag starts `.github/workflows/release.yml`. The workflow rebuilds the package and creates a GitHub Release with the source archive and wheel. Replace `0.4.1` with the next release version when repeating the process. Do not tag until the tests, changelog, package version, and rule-pack version agree.
 
 ## Optional PyPI publication
 
@@ -41,7 +41,7 @@ PyPI publication is a separate maintainer decision. Configure PyPI trusted publi
 Until a PyPI release exists, users can install the tagged source directly:
 
 ```powershell
-python -m pip install "biorobust @ git+https://github.com/simplyshree/BioRobust.git@v0.4.0"
+python -m pip install "biorobust @ git+https://github.com/simplyshree/BioRobust.git@v0.4.1"
 ```
 
 ## Release hygiene

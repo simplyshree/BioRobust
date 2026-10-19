@@ -153,11 +153,17 @@ The scanner is deliberately static and local. It does not import or execute targ
 
 ## Install as software
 
-For the current development version:
+For the released source version:
+
+```powershell
+python -m pip install "biorobust @ git+https://github.com/simplyshree/BioRobust.git@v0.4.1"
+biorobust --version
+```
+
+To use the latest development branch instead:
 
 ```powershell
 python -m pip install "biorobust @ git+https://github.com/simplyshree/BioRobust.git@main"
-biorobust --version
 ```
 
 For local development and contributions:
@@ -196,7 +202,7 @@ There is no container or hosted service required for v0.4. The supported runtime
 
 ## Release
 
-BioRobust uses semantic-style versions such as `0.4.0`. The version must match in `pyproject.toml` and `src/biorobust/__init__.py`. A release is made from a Git tag such as `v0.4.0`; GitHub Actions builds the source archive and wheel and attaches them to a GitHub Release. PyPI publication is intentionally a separate maintainer decision.
+BioRobust uses semantic-style versions such as `0.4.1`. The version must match in `pyproject.toml` and `src/biorobust/__init__.py`. A release is made from a Git tag such as `v0.4.1`; GitHub Actions builds the source archive and wheel and attaches them to a GitHub Release. PyPI publication is intentionally a separate maintainer decision.
 
 ## Repository guide
 

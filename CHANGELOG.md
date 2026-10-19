@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- No unreleased changes.
+
+## 0.4.1 - Reporting hardening and pilot release
+
 - Added the explicit `biology` profile to the report schema while keeping existing profile names compatible.
 - Added immutable `--theme` and `--detail` presentation options for `scan` and `start`; JSON remains complete and unchanged by these options.
 - Reworked PDF output into readable portrait A4 layouts with centralized styles, text-visible status labels, and scientific, minimal, and high-contrast themes.

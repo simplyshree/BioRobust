@@ -11,7 +11,7 @@ I would love feedback from people working with genomics, bioinformatics, transcr
 Try it on a repository you know well:
 
 ```powershell
-python -m pip install "biorobust @ git+https://github.com/simplyshree/BioRobust.git@main"
+python -m pip install "biorobust @ git+https://github.com/simplyshree/BioRobust.git@v0.4.1"
 biorobust start https://github.com/OWNER/PROJECT.git --format pdf --theme scientific --detail standard --output biorobust-report.pdf
 ```
 

@@ -6,7 +6,7 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 
-RULE_PACK_VERSION = "0.4.0"
+RULE_PACK_VERSION = "0.4.1"
 
 
 @dataclass(frozen=True, slots=True)

@@ -53,8 +53,8 @@ class ReportingTests(unittest.TestCase):
         report = ScanReport.create(
             target="fixture",
             profile="biology",
-            tool_version="0.4.0",
-            rule_pack_version="0.4.0",
+            tool_version="0.4.1",
+            rule_pack_version="0.4.1",
             manifest_hash="0" * 64,
             generated_at="2026-01-01T00:00:00+00:00",
             findings=[
@@ -92,8 +92,8 @@ class ReportingTests(unittest.TestCase):
         report = ScanReport.create(
             target="fixture",
             profile="biology",
-            tool_version="0.4.0",
-            rule_pack_version="0.4.0",
+            tool_version="0.4.1",
+            rule_pack_version="0.4.1",
             manifest_hash="0" * 64,
             generated_at="2026-01-01T00:00:00+00:00",
             findings=[Finding("TEST-001", "Title", "<unsafe claim>", "fail", "high", 1.0, "Message")],
