@@ -240,7 +240,7 @@ def _workflow_path_matches(repo: Repository, path: Path) -> list[tuple[str, int,
 def check_workflow(repo: Repository) -> Finding:
     workflows = _workflow_files(repo)
     if not workflows:
-        return _finding("DNA-WF-001", "Workflow definition", "A supported workflow definition is present.", "unknown", "medium", 0.8, "No Nextflow, Snakemake, CWL, or WDL workflow definition was detected.", evidence=[_absence("No supported workflow definition was found.")], limitations=GENOMICS_LIMITATIONS, recommendation="Use a declarative workflow or document the execution order and parameters explicitly.")
+        return _finding("DNA-WF-001", "Workflow definition", "A supported workflow definition is present.", "not_applicable", "low", 0.95, "No supported workflow definition was detected; workflow-specific checks do not apply.", evidence=[_absence("No supported workflow definition was found.")], limitations=GENOMICS_LIMITATIONS)
     evidence = [_evidence(repo, path, f"Supported workflow definition detected: {path.name}.", "artifact") for path in workflows[:10]]
     return _finding("DNA-WF-001", "Workflow definition", "A supported workflow definition is present.", "pass", "low", 0.99, f"Detected {len(workflows)} supported workflow definition(s).", evidence=evidence, limitations=GENOMICS_LIMITATIONS)
 
@@ -300,6 +300,45 @@ ASSEMBLY_PATTERN = re.compile(r"\b(?:GRCh\d+|GRCm\d+|hg\d+|mm\d+|T2T-[A-Za-z0-9_
 EXTERNAL_REFERENCE_PATTERN = re.compile(r"(?:https?://[^\s)>'\"]+|(?:GCA|GCF)_\d+\.\d+)", re.IGNORECASE)
 CHECKSUM_PATTERN = re.compile(r"(?i)^\s*(?:sha256\s*[:=]?\s*)?([0-9a-f]{64}|[0-9a-f]{32})\s+[*]?([^\s]+)\s*$")
 INLINE_CHECKSUM_PATTERN = re.compile(r"(?i)(sha256|md5)\s*[:=]\s*([0-9a-f]{64}|[0-9a-f]{32})")
+REFERENCE_CONTEXT_PATTERN = re.compile(r"(?i)\b(?:reference|ref|genome|assembly|accession)\b")
+REFERENCE_HISTORY_NAMES = {"changelog.md", "history.md", "news.md", "changes.md"}
+REFERENCE_DIRECTORY_NAMES = {"reference", "references", "genome", "genomes", "refs"}
+
+
+def _has_reference_context(line: str) -> bool:
+    """Return whether non-URL text gives a biological reference signal.
+
+    A comment such as ``Reference: https://...`` is not enough: ordinary
+    software documentation uses that form for citations and implementation
+    notes. Stronger signals are a genome/assembly/accession, a reference
+    assignment or command option, or a reference term next to a sequence-file
+    extension.
+    """
+    without_urls = re.sub(r"https?://[^\s)>'\"]+", "", line)
+    if ASSEMBLY_PATTERN.search(without_urls) or re.search(r"(?i)\b(?:genome|assembly|accession)\b", without_urls):
+        return True
+    if re.match(r"^\s*(?:#|//|;|<!--)", without_urls):
+        return False
+    if re.search(r"(?i)(?:--?reference\b|(?<![:\w])(?:reference|ref)\s*[=:([ ])", without_urls):
+        return True
+    return bool(re.search(r"(?i)\b(?:reference|ref)\b.*\.(?:fa|fasta|fastq|fq|bam|cram|vcf)\b", without_urls))
+
+
+def _reference_path_matches(path: Path, line: str) -> list[re.Match[str]]:
+    """Return FASTA-like paths when the line has reference-specific context.
+
+    Scientific Python libraries often contain identifiers such as
+    ``io.format.fasta`` or parser examples named ``input.fasta``. Those are
+    not evidence that a workflow depends on a reference genome, so source and
+    documentation lines need a stronger context signal before they are used by
+    the provenance rule.
+    """
+    if path.name.lower() in REFERENCE_HISTORY_NAMES:
+        return []
+    matches = list(REFERENCE_PATTERN.finditer(line))
+    if not matches or not _has_reference_context(line):
+        return []
+    return matches
 
 
 def _checksum_records(repo: Repository) -> list[tuple[Path, int, str, str, str]]:
@@ -334,17 +373,23 @@ def _checksum_matches(repo: Repository, reference: Path, records: list[tuple[Pat
 
 def check_reference_provenance(repo: Repository) -> Finding:
     all_files = repo.files()
-    text_files = [path for path in all_files if path.suffix.lower() in {".nf", ".smk", ".py", ".r", ".sh", ".yaml", ".yml", ".md", ".txt", ".toml", ".cff"} or path.name.lower() in {"snakefile", "workflow.smk"}]
+    text_files = [path for path in all_files if path.suffix.lower() in {".nf", ".smk", ".py", ".r", ".sh", ".yaml", ".yml", ".md", ".rst", ".txt", ".toml", ".cff"} or path.name.lower() in {"snakefile", "workflow.smk"}]
     reference_mentions: list[tuple[Path, str, int]] = []
     external_mentions: list[tuple[Path, str, int]] = []
     assembly_mentions: list[tuple[Path, str, int]] = []
     for path in text_files:
         for line_number, line in enumerate(repo.text(path).splitlines(), 1):
-            if any(term in line.lower() for term in ("reference", "genome", "assembly", ".fa", ".fasta")):
-                reference_mentions.extend((path, match.group("value"), line_number) for match in REFERENCE_PATTERN.finditer(line))
-            external_mentions.extend((path, match.group(0), line_number) for match in EXTERNAL_REFERENCE_PATTERN.finditer(line))
-            assembly_mentions.extend((path, match.group(0), line_number) for match in ASSEMBLY_PATTERN.finditer(line))
-    local_reference_paths = [path for path in all_files if path.name.lower().endswith((".fa", ".fasta", ".fa.gz", ".fasta.gz"))]
+            context = _has_reference_context(line)
+            if context:
+                reference_mentions.extend((path, match.group("value"), line_number) for match in _reference_path_matches(path, line))
+            if path.name.lower() not in REFERENCE_HISTORY_NAMES and (context or re.search(r"(?i)\b(?:GCA|GCF)_\d+\.\d+\b", line)):
+                external_mentions.extend((path, match.group(0), line_number) for match in EXTERNAL_REFERENCE_PATTERN.finditer(line))
+                assembly_mentions.extend((path, match.group(0), line_number) for match in ASSEMBLY_PATTERN.finditer(line))
+    local_reference_paths = [
+        path for path in all_files
+        if path.name.lower().endswith((".fa", ".fasta", ".fa.gz", ".fasta.gz"))
+        and any(part.lower() in REFERENCE_DIRECTORY_NAMES for part in Path(repo.relative(path)).parts[:-1])
+    ]
     referenced_paths: list[tuple[Path, Path | None, int]] = []
     for path, value, line in reference_mentions:
         referenced_paths.append((path, repo.find_path(value), line))
@@ -365,7 +410,9 @@ def check_reference_provenance(repo: Repository) -> Finding:
     if missing:
         return _finding("DNA-REF-001", "Reference genome provenance", "The referenced genome assembly and integrity evidence are traceable.", "fail", "high", 0.99, "A workflow or document references a missing local reference file.", evidence=missing + evidence, limitations=GENOMICS_LIMITATIONS, recommendation="Add the referenced file or explicitly identify the external accession/URL used at runtime.")
     if not referenced_paths and not external:
-        return _finding("DNA-REF-001", "Reference genome provenance", "The referenced genome assembly and integrity evidence are traceable.", "manual_review", "high", 0.75, "No local or explicit external reference identity was detected.", evidence=[_absence("No reference FASTA path, accession, or URL was detected.")], limitations=GENOMICS_LIMITATIONS, recommendation="Document the reference assembly and provenance, or explicitly state that the workflow is reference-free.")
+        if not assembly_mentions:
+            return _finding("DNA-REF-001", "Reference genome provenance", "The referenced genome assembly and integrity evidence are traceable.", "not_applicable", "low", 0.95, "No reference-genome evidence was detected.", evidence=[_absence("No reference FASTA path, accession, URL, or assembly identifier was detected.")], limitations=GENOMICS_LIMITATIONS)
+        return _finding("DNA-REF-001", "Reference genome provenance", "The referenced genome assembly and integrity evidence are traceable.", "manual_review", "high", 0.75, "An assembly/version signal was detected, but no local or explicit external reference identity was found.", evidence=[_absence("No reference FASTA path, accession, or URL was detected.")], limitations=GENOMICS_LIMITATIONS, recommendation="Document the reference assembly and provenance, or explicitly state that the workflow is reference-free.")
     if assembly_mentions:
         evidence.extend(_evidence(repo, path, f"Assembly/version signal: {value}", "declaration", 0.9, line, line) for path, value, line in assembly_mentions[:5])
     else:
@@ -394,7 +441,14 @@ def check_reference_provenance(repo: Repository) -> Finding:
 
 def _genomic_input(path: Path) -> bool:
     name = path.name.lower()
-    return name.endswith((".fastq", ".fastq.gz", ".fq", ".fq.gz", ".bam", ".cram")) and "expected" not in name
+    if not name.endswith((".fastq", ".fastq.gz", ".fq", ".fq.gz", ".bam", ".cram")):
+        return False
+    if any(token in name for token in ("expected", "error", "invalid", "malformed", "trunc", "empty")):
+        return False
+    parts = {part.lower() for part in path.parts}
+    if "tests" in parts and "data" in parts and not name.startswith(("reads", "read_", "input", "sample", "example")):
+        return False
+    return True
 
 
 def _expected_output(path: Path) -> bool:
@@ -432,10 +486,14 @@ def check_genomic_validation(repo: Repository) -> Finding:
         return _finding("DNA-VAL-001", "Known-answer validation", "Representative inputs are connected to an expected output by a substantive comparison.", "pass", "high", 0.96, "Representative input, expected output, and a substantive comparison were detected.", evidence=evidence, limitations=GENOMICS_LIMITATIONS)
     if inputs and expected:
         return _finding("DNA-VAL-001", "Known-answer validation", "Representative inputs are connected to an expected output by a substantive comparison.", "manual_review", "high", 0.9, "Input and expected-output artifacts exist, but a substantive comparison connecting them was not detected.", evidence=evidence, limitations=GENOMICS_LIMITATIONS, recommendation="Add a test or documented command that compares actual output to the expected output; an assertion such as assert True is insufficient.")
+    if not inputs and not expected:
+        return _finding("DNA-VAL-001", "Known-answer validation", "Representative inputs are connected to an expected output by a substantive comparison.", "not_applicable", "low", 0.9, "No representative genomic input or expected-output artifacts were detected.", evidence=evidence, limitations=GENOMICS_LIMITATIONS)
     return _finding("DNA-VAL-001", "Known-answer validation", "Representative inputs are connected to an expected output by a substantive comparison.", "unknown", "high", 0.9, "Known-answer validation could not be established from local artifacts.", evidence=evidence, limitations=GENOMICS_LIMITATIONS, recommendation="Add a small input fixture, expected output, and substantive comparison test.")
 
 
-CONTAINER_DECLARATION = re.compile(r"(?i)(?:\bcontainer\b|\bimage\b)\s*[:=]\s*[\"']?([^\s\"']+)|^\s*FROM\s+([^\s]+)|^\s*container\s*:\s*([^\s]+)")
+CONTAINER_KEY_DECLARATION = re.compile(r"(?i)^\s*(?:-\s*)?(?:container|image)\s*[:=]\s*[\"']?([^\s\"']+)")
+NEXTFLOW_CONTAINER_DECLARATION = re.compile(r"(?i)^\s*(?:process\.)?container\s+(?:=\s*)?[\"']?([^\s\"']+)")
+DOCKER_FROM_DECLARATION = re.compile(r"(?i)^\s*FROM\s+([^\s]+)")
 IMAGE_DIGEST = re.compile(r"@sha256:[0-9a-f]{64}$", re.IGNORECASE)
 
 
@@ -444,7 +502,10 @@ def check_portability(repo: Repository) -> Finding:
     for path in repo.files():
         if path.name.lower() in {"dockerfile", "nextflow.config", "snakefile", "workflow.smk"} or path.suffix.lower() in {".nf", ".smk", ".yaml", ".yml", ".cwl", ".wdl"}:
             for line_number, line in enumerate(repo.text(path).splitlines(), 1):
-                match = CONTAINER_DECLARATION.search(line)
+                if path.name.lower() == "dockerfile":
+                    match = DOCKER_FROM_DECLARATION.search(line)
+                else:
+                    match = CONTAINER_KEY_DECLARATION.search(line) or NEXTFLOW_CONTAINER_DECLARATION.search(line)
                 if match:
                     image = next(group for group in match.groups() if group)
                     declarations.append((path, line_number, image.rstrip(",")))

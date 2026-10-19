@@ -193,7 +193,9 @@ class ScannerTests(unittest.TestCase):
         self.assertNotEqual(next(item for item in placeholder.findings if item.rule_id == "DNA-REF-001").status, "pass")
 
         mutable = scan(ROOT / "fixtures" / "mutable_container", "genomics")
-        self.assertEqual(next(item for item in mutable.findings if item.rule_id == "DNA-PORT-001").status, "unknown")
+        mutable_portability = next(item for item in mutable.findings if item.rule_id == "DNA-PORT-001")
+        self.assertEqual(mutable_portability.status, "unknown")
+        self.assertTrue(any("ubuntu:22.04" in item.observation for item in mutable_portability.evidence))
 
         missing_expected = scan(ROOT / "fixtures" / "missing_expected", "genomics")
         self.assertEqual(next(item for item in missing_expected.findings if item.rule_id == "DNA-VAL-001").status, "unknown")
@@ -204,5 +206,26 @@ class ScannerTests(unittest.TestCase):
         documentation_only = scan(ROOT / "fixtures" / "documentation_only", "genomics")
         self.assertNotEqual(next(item for item in documentation_only.findings if item.rule_id == "DNA-REF-001").status, "pass")
         self.assertNotEqual(next(item for item in documentation_only.findings if item.rule_id == "DNA-VAL-001").status, "pass")
+
+    def test_genomic_checks_are_precise_for_bioinformatics_libraries(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT, ignore_cleanup_errors=True) as directory:
+            path = Path(directory)
+            (path / "README.md").write_text("# Bioinformatics library\nSee https://numpy.org/doc/stable/reference/arrays.scalars.html.\n", encoding="utf-8")
+            (path / "LICENSE").write_text("BSD-3-Clause\n", encoding="utf-8")
+            (path / "CHANGELOG.md").write_text("Renamed io.format.fasta and skbio.tree.fasta.\n", encoding="utf-8")
+            (path / "module.py").write_text("def parse(input_file):\n    return input_file.fasta\n", encoding="utf-8")
+            workflow = path / ".github" / "workflows" / "gpu.yml"
+            workflow.parent.mkdir(parents=True)
+            workflow.write_text(
+                "jobs:\n  test:\n    steps:\n      - run: from numba_cuda_mlir import cuda\n        numba: numba-cuda-mlir\n",
+                encoding="utf-8",
+            )
+
+            findings = {finding.rule_id: finding for finding in scan(path, "genomics").findings}
+
+            self.assertEqual(findings["DNA-REF-001"].status, "not_applicable")
+            self.assertEqual(findings["DNA-VAL-001"].status, "not_applicable")
+            self.assertEqual(findings["DNA-PORT-001"].status, "unknown")
+            self.assertFalse(any("numba" in item.observation.lower() for item in findings["DNA-PORT-001"].evidence))
 
 
